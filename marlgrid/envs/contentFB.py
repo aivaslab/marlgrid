@@ -1,6 +1,6 @@
 from ..base import MultiGridEnv, MultiGrid
 from ..objects import *
-
+from ..agents import GridAgentInterface
 
 class ContentFBEnv(MultiGridEnv):
     """
@@ -11,7 +11,13 @@ class ContentFBEnv(MultiGridEnv):
 
     mission = "use the key to open the door and then get to the goal"
     metadata = {}
-    apos = [(6,11,3)]
+    
+
+    def init_agents(self, arg, agent_kwargs):
+        if arg == 0:
+            self.apos = [(6,11,3)]
+        for agent in self.apos:
+            self.add_agent(GridAgentInterface(**agent_kwargs))
 
     def _gen_grid(self, width, height):
         # Create an empty grid
@@ -35,7 +41,12 @@ class ContentFBEnv2(MultiGridEnv):
 
     mission = "use the key to open the door and then get to the goal"
     metadata = {}
-    apos = [(6,11,3)]
+    
+    def init_agents(self, arg, agent_kwargs):
+        if arg == 0:
+            self.apos = [(6,11,3)]
+        for agent in self.apos:
+            self.add_agent(GridAgentInterface(**agent_kwargs))
 
     def _gen_grid(self, width, height):
         # Create an empty grid

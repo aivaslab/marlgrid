@@ -1,5 +1,6 @@
 from ..base import MultiGridEnv, MultiGrid
 from ..objects import *
+from ..agents import GridAgentInterface
 
 
 class CompFeedEnv(MultiGridEnv):
@@ -11,7 +12,12 @@ class CompFeedEnv(MultiGridEnv):
 
     mission = "use the key to open the door and then get to the goal"
     metadata = {}
-    apos = [(2,7,0),(12,7,2)]
+
+    def init_agents(self, arg, agent_kwargs):
+        if arg == 0:
+            self.apos = [(2,7,0),(12,7,2)]
+        for agent in self.apos:
+            self.add_agent(GridAgentInterface(**agent_kwargs))
 
     def _gen_grid(self, width, height):
         # Create an empty grid
@@ -43,7 +49,12 @@ class CompFeedEnv2(MultiGridEnv):
 
     mission = "use the key to open the door and then get to the goal"
     metadata = {}
-    apos = [(2,7,0),(12,5,2),(12,9,2)]
+
+    def init_agents(self, arg, agent_kwargs):
+        if arg == 0:
+            self.apos = [(2,7,0),(12,5,2),(12,9,2)]
+        for agent in self.apos:
+            self.add_agent(GridAgentInterface(**agent_kwargs))
 
     def _gen_grid(self, width, height):
         # Create an empty grid

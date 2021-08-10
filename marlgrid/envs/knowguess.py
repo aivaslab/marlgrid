@@ -1,15 +1,21 @@
 from ..base import MultiGridEnv, MultiGrid
 from ..objects import *
+from ..agents import GridAgentInterface
 
 
 class KnowGuessEnv(MultiGridEnv):
     """
     """
 
-    mission = "use the key to open the door and then get to the goal"
+    mission = ""
     metadata = {}
 
-    apos = [(7,3,1),(7,11,3)]
+    def init_agents(self, arg, agent_kwargs):
+        if arg == 0:
+            self.apos = [(7,3,1),(7,11,3)]
+
+        for agent in self.apos:
+            self.add_agent(GridAgentInterface(**agent_kwargs))
 
     def _gen_grid(self, width, height):
         # Create an empty grid
@@ -32,8 +38,16 @@ class KnowGuessEnv2(MultiGridEnv):
 
     mission = "use the key to open the door and then get to the goal"
     metadata = {}
-    
-    apos = [(4,3,1),(4,11,3), (11, 7,2)]
+
+    def init_agents(self, arg, agent_kwargs):
+        if arg == 0:
+            self.apos = [(4,3,1),(4,11,3), (11, 7,2)]
+        if arg == 1:
+            self.apos = [(3,11,3),(5,11,3), (11, 7,2)]
+        if arg == 2:
+            self.apos = [(3,11,3),(5,11,3), (11, 7,2)]
+        for agent in self.apos:
+            self.add_agent(GridAgentInterface(**agent_kwargs))
 
     def _gen_grid(self, width, height):
         # Create an empty grid
@@ -64,7 +78,12 @@ class KnowGuessEnv3(MultiGridEnv):
 
     mission = "use the key to open the door and then get to the goal"
     metadata = {}
-    apos = [(4,3,1),(4,11,3), (11, 7,2)]
+
+    def init_agents(self, arg, agent_kwargs):
+        if arg == 0:
+            self.apos = [(4,3,1),(4,11,3), (11, 7,2)]
+        for agent in self.apos:
+            self.add_agent(GridAgentInterface(**agent_kwargs))
 
     def _gen_grid(self, width, height):
         # Create an empty grid
