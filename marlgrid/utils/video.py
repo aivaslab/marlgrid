@@ -61,7 +61,7 @@ class GridRecorder(gym.core.Wrapper):
     def __init__(
             self,
             env,
-            save_root,
+            save_root='',
             max_steps=1000,
             auto_save_images=True,
             auto_save_videos=True,

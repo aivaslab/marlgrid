@@ -4,6 +4,11 @@ from enum import IntEnum
 import warnings
 import numba
 
+'''from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.optimizers import Adam
+from collections import deque'''
+
 from .objects import GridAgent, BonusTile
 
 class GridAgentInterface(GridAgent):
@@ -18,7 +23,7 @@ class GridAgentInterface(GridAgent):
 
     def __init__(
             self,
-            view_size=7,
+            view_size=9,
             view_tile_size=5,
             view_offset=0,
             observation_style='image',
@@ -341,3 +346,49 @@ def occlude_mask(grid, agent_pos):
                         mask[i - 1, j + 1] = True
                     
     return mask
+
+class IndependentLearners():
+    def __init__(self, *agents):
+        self.agents = agents
+    def action_step(self, obs):
+        return [x.action_step(obs[i]) for i, x in enumerate(agents)]
+'''
+class TestRLAgent(GridAgentInterface):
+
+    def create_model(self):
+        model   = Sequential()
+        state_shape  = self.observation_space.shape
+        model.add(Dense(24, input_dim=state_shape[0], 
+            activation="relu"))
+        model.add(Dense(48, activation="relu"))
+        model.add(Dense(24, activation="relu"))
+        model.add(Dense(self.env.action_space.n))
+        model.compile(loss="mean_squared_error",
+            optimizer=Adam(lr=self.learning_rate))
+        return model
+
+    def __init__(self):
+        #self.env     = env
+        self.memory  = deque(maxlen=2000)
+        
+        self.gamma = 0.95
+        self.epsilon = 1.0
+        self.epsilon_min = 0.01
+        self.epsilon_decay = 0.995
+        self.learning_rate = 0.01
+        self.tau = .05
+        self.model = self.create_model()
+        # "hack" implemented by DeepMind to improve convergence
+        self.target_model = self.create_model()
+
+    def action_step(self, obs):
+        self.epsilon *= self.epsilon_decay
+        self.epsilon = max(self.epsilon_min, self.epsilon)
+        if np.random.random() < self.epsilon:
+            return self.env.action_space.sample()
+        return np.argmax(self.model.predict(state)[0])
+
+    def save_step(self, *transition_values):
+        #saves the transition data to replay buffers
+        self.memory.append([state, action, reward, new_state, done])
+        '''

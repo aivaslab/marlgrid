@@ -1,5 +1,6 @@
 from ..base import MultiGridEnv, MultiGrid
 from ..objects import *
+from random import randrange
 
 
 class DoorKeyEnv(MultiGridEnv):
@@ -11,6 +12,9 @@ class DoorKeyEnv(MultiGridEnv):
 
     mission = "use the key to open the door and then get to the goal"
     metadata = {}
+
+    def _rand_int(self, x, y):
+        return randrange(x, y)
 
     def _gen_grid(self, width, height):
         # Create an empty grid
