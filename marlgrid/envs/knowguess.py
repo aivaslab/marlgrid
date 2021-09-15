@@ -45,7 +45,7 @@ class KnowGuessEnv2(MultiGridEnv):
         if arg == 1:
             self.apos = [(3,11,3),(5,11,3), (11, 7,2)]
         if arg == 2:
-            self.apos = [(3,11,3),(5,11,3), (11, 7,2)]
+            self.apos = [(3,11,3),(5,11,1), (11, 7,2)]
         for agent in self.apos:
             self.add_agent(GridAgentInterface(**agent_kwargs))
 

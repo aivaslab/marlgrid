@@ -6,8 +6,8 @@ import numba
 
 '''from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout
-from tensorflow.keras.optimizers import Adam
-from collections import deque'''
+from tensorflow.keras.optimizers import Adam'''
+from collections import deque
 
 from .objects import GridAgent, BonusTile
 

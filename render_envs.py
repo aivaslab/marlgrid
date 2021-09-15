@@ -21,10 +21,10 @@ def renderEnv(env, num):
 		agent.pos = fwd_pos
 
 		agent.dir = p[2]
-	im = Image.fromarray(env.render(mode='', show_agent_views=True))
-	im.save(os.path.join('images', type(env).__name__ + str(num) + '_views.png'))
 	im = Image.fromarray(env.render(mode='', show_agent_views=False))
 	im.save(os.path.join('images', type(env).__name__ + str(num) + '_env.png'))
+	im = Image.fromarray(env.render(mode='', show_agent_views=True))
+	im.save(os.path.join('images', type(env).__name__ + str(num) + '_views.png'))
 
 
 #contains env class and argument for init_agents
@@ -50,6 +50,6 @@ for e in envs:
 		num = 0
 		curname = type(env).__name__
 
-	print('rendering', curname, num)
+	#print('rendering1', curname, num)
 	renderEnv(env, num)
 	num += 1

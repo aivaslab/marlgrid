@@ -5,6 +5,7 @@ from .doorkey import DoorKeyEnv
 from .cluttered import ClutteredMultiGrid
 from .goalcycle import ClutteredGoalCycleEnv
 from .viz_test import VisibilityTestEnv
+from .contentFB import ContentFBEnv
 
 from ..agents import GridAgentInterface
 from gym.envs.registration import register as gym_register
@@ -66,6 +67,22 @@ def env_from_config(env_config, randomize_seed=True):
     
     return env_class(**env_kwargs)
 
+register_marl_env(
+    "MarlGrid-1AgentDoorKeyEnv6x6-v0",
+    DoorKeyEnv,
+    grid_size=6,
+    view_size=6,
+    n_agents=1,
+)
+
+register_marl_env(
+    "MarlGrid-1AgentContentFBEnv15x15-v0",
+    ContentFBEnv,
+    grid_size=15,
+    view_size=13,
+    n_agents=1,
+    env_kwargs={'n_clutter':30}
+)
 
 register_marl_env(
     "MarlGrid-1AgentCluttered15x15-v0",

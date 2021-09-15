@@ -5,10 +5,15 @@ from marlgrid.rendering import InteractivePlayerWindow
 from marlgrid.agents import GridAgentInterface
 from marlgrid.envs import env_from_config
 from collections import deque
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.layers import Dense, Dropout, Flatten
+from tensorflow.keras.optimizers import Adam, SGD
 import random
+import tqdm
+
 
 
 class dqlPlayer:
@@ -23,36 +28,33 @@ class dqlPlayer:
         self.memory  = deque(maxlen=2000)
         
         self.gamma = 0.95
-        self.epsilon = 0.9
+        self.epsilon = 0.1
         self.epsilon_min = 0.01
-        self.epsilon_decay = 0.995
+        self.epsilon_decay = 0.99
         self.learning_rate = 0.001
         self.tau = .05
-        self.observation_space = (-1,5,3)
-        self.action_space = np.array(range(3))
+        self.observation_space = (30,30,3)
+        self.action_space = np.array(range(5))
         self.model = self.create_model()
         # "hack" implemented by DeepMind to improve convergence
         self.target_model = self.create_model()
         self.batch_size = 64
 
     def create_model(self):
-        model   = Sequential()
-        state_shape  = self.observation_space
-        model.add(Dense(self.action_space.shape[0], input_shape=(5,5,3), activation="linear"))
-        #model.add(Dense(24, activation="relu"))
-        #model.add(Dense(24, activation="relu"))
-        #model.add(Dense(self.action_space.shape[0]))
-        #print(self.action_space.shape[0])
+        model = Sequential()
+        model.add(Dense(24, input_shape=self.observation_space, activation="relu"))
+        model.add(Flatten())
+        model.add(Dense(self.action_space.shape[0], activation="sigmoid"))
         model.compile(loss="mean_squared_error",
-            optimizer=Adam(lr=self.learning_rate))
+            optimizer=SGD(lr=self.learning_rate))
         return model
 
     def action_step(self, obs):
-        self.epsilon *= self.epsilon_decay
-        self.epsilon = max(self.epsilon_min, self.epsilon)
         if np.random.random() < self.epsilon:
             return np.random.choice(self.action_space,1)[0]
-        return np.argmax(self.model.predict(obs.astype(np.uint8))[0][0])
+        prediction = self.model.predict(obs.astype(np.uint8))
+        #print('pshape', prediction.shape)
+        return np.argmax(prediction[0][0])
 
     def save_step(self, obs, act, rew, new_obs, done):
         self.step_count += 1
@@ -60,20 +62,23 @@ class dqlPlayer:
         if rew == 0:
             rew = -1
         self.cumulative_reward += rew
-        print(f"   step {self.step_count:<4d}: reward {rew} (episode total {self.cumulative_reward}) epsilon {self.epsilon}")
+        #print(f"   step {self.step_count:<4d}: reward {rew} (episode total {self.cumulative_reward}) epsilon {self.epsilon}")
         
 
         self.memory.append([obs, act, rew, new_obs, done])
 
         if done and self.step_count >= self.batch_size: #(self.episode_count + self.step_count) % self.batch_size == 0:
-            #print('training')
-            self.train2(rand=True)
+            print('training')
+            self.train(rand=True)
 
     def start_episode(self):
         self.cumulative_reward = 0
         self.step_count = 0
     
     def end_episode(self):
+
+        self.epsilon *= self.epsilon_decay
+        self.epsilon = max(self.epsilon_min, self.epsilon)
         print(
             f"Finished episode {self.episode_count} after {self.step_count} steps."
             f"  Episode return was {self.cumulative_reward}."
@@ -88,11 +93,11 @@ class dqlPlayer:
         #print(minibatch)
         for state, action, reward, next_state, done in minibatch:
             target = reward
-            #print('x', np.array(next_state).shape, np.array(state).shape)
+            #print('x', np.array([next_state]).shape, np.array([state]).shape)
             if not done:
                 target = (reward + self.gamma *
-                          np.amax(self.model.predict(next_state)[0]))
-            target_f = self.model.predict(state)
+                          np.amax(self.model.predict([next_state])[0]))
+            target_f = self.model.predict([state])
             target_f[0][action] = target
             self.model.fit(state, target_f, epochs=1, verbose=0)
 
@@ -106,21 +111,21 @@ class dqlPlayer:
             target = reward
             if not done:
                 target = (reward + self.gamma *
-                          np.amax(self.model.predict(next_state)[0]))
-            target_f = self.model.predict(state)
+                          np.amax(self.model.predict([next_state])[0]))
+            target_f = self.model.predict([state])
             target_f[0][action] = target
-            state_vec += [state,]
-            target_vec += [target_f,]
+            state_vec += [state[0],]
+            target_vec += [target_f[0],]
         #print(len(state_vec))
         state_vec = np.asarray(state_vec).astype(np.float32)
         target_vec = np.asarray(target_vec).astype(np.float32)
-        print(state_vec.shape)
+        #print(state_vec.shape)
         self.model.fit(state_vec, target_vec, epochs=1, verbose=1)
         #self.model.fit(np.squeeze(np.array(state_vec)), np.squeeze(np.array(target_vec)), epochs=1, verbose=0)
 
 
 
-'''env_config =  {
+env_config0 =  {
     "env_class": "ClutteredGoalCycleEnv",
     "grid_size": 13,
     "max_steps": 250,
@@ -131,32 +136,53 @@ class dqlPlayer:
     "n_bonus_tiles": 3,
     "initial_reward": True,
     "penalty": -1.5
-}'''
+}
 
-env_config =  {
+env_config1 =  {
     "env_class": "EmptyMultiGrid",
     "grid_size": 6,
-    "max_steps": 100,
+    "max_steps": 500,
     "respawn": True,
     "ghost_mode": True,
     "reward_decay": False,
 }
 
+env_config2 =  {
+    "env_class": "DoorKeyEnv",
+    "grid_size": 6,
+    "max_steps": 250,
+    "respawn": True,
+    "ghost_mode": True,
+    "reward_decay": False,
+}
+
+env_config3 =  {
+    "env_class": "ContentFBEnv",
+    "grid_size": 15,
+    "max_steps": 250,
+    "respawn": True,
+    "ghost_mode": True,
+    "reward_decay": True,
+}
+
 player_interface_config = {
-    "view_size": 5,
+    "view_size": 6,
     "view_offset": 1,
-    "view_tile_size": 1,
-    "observation_style": "rich",
+    "view_tile_size": 5,
+    "observation_style": "image",
     "see_through_walls": False,
     "color": "prestige"
 }
+
+env_config = env_config2 # select from above
 
 env_config['agents'] = [player_interface_config]
 
 env = env_from_config(env_config)
 
 human = dqlPlayer(env)
-total_eps = 100
+total_eps = 200
+#print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 for batch in range(total_eps):
     obs_list = env.reset()
 
@@ -164,18 +190,26 @@ for batch in range(total_eps):
     done = False
     while not done:
 
-        env.render() # OPTIONAL: render the whole scene + birds eye view
-        #print('obs:',obs_list[0])
+        #env.render() # OPTIONAL: render the whole scene + birds eye view
         #print('d')
-        player_action = human.action_step(obs_list[0]['pov'])
-        # The environment expects a list of actions, so put the player action into a list
+        if player_interface_config['observation_style'] == 'rich':
+            ob = obs_list[0]['pov']
+        else:
+            ob = obs_list[0][np.newaxis, :]
+        player_action = human.action_step(ob)
+
         agent_actions = [player_action]
 
         next_obs_list, rew_list, done, _ = env.step(agent_actions)
         
-        human.save_step(
-            obs_list[0]['pov'], player_action, rew_list[0], next_obs_list[0]['pov'], done
-        )
+        if player_interface_config['observation_style'] == 'rich':
+            human.save_step(
+                ob, player_action, rew_list[0], next_obs_list[0]['pov'], done
+            )
+        else:
+            human.save_step(
+                ob, player_action, rew_list[0], next_obs_list[0][np.newaxis, :], done
+            )
 
         obs_list = next_obs_list
 
