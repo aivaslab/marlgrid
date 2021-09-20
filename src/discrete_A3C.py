@@ -19,8 +19,58 @@ os.environ["OMP_NUM_THREADS"] = "1"
 import tqdm
 
 
+class CNet(nn.Module):
+	def __init__(self, s_dim, a_dim, hidden=6):
+		super(CNet, self).__init__()
+		self.s_dim = s_dim
+		self.a_dim = a_dim
+		self.c1 = nn.Conv2d(3, 16, 3, stride=2)
+		self.c2 = nn.Conv2d(16, 8, 3, stride=2)
+		self.pi1 = nn.Linear(s_dim, hidden)
+		self.pi2 = nn.Linear(hidden, a_dim)
+		self.v1 = nn.Linear(s_dim, hidden)
+		self.v2 = nn.Linear(hidden, 1)
+		set_init([self.pi1, self.pi2, self.v1, self.v2])
+		self.distribution = torch.distributions.Categorical
+		self.initialized = True
+
+	def forward(self, x):
+		#print(x.shape)
+		x = x.permute(0,1,4,2,3)
+		x = torch.squeeze(x, dim=1)
+		x = self.c1(x)
+		x = self.c2(x)
+		#print(x.shape)
+		x = torch.flatten(x, start_dim=1)
+		#print(x.shape)
+		pi1 = torch.tanh(self.pi1(x))
+		logits = self.pi2(pi1)
+		v1 = torch.tanh(self.v1(x))
+		values = self.v2(v1)
+		return logits, values
+
+	def choose_action(self, s):
+		self.eval()
+		logits, _ = self.forward(s)
+		prob = F.softmax(logits, dim=1).data
+		m = self.distribution(prob)
+		return m.sample().numpy()[0]
+
+	def loss_func(self, s, a, v_t):
+		self.train()
+		logits, values = self.forward(s)
+		td = v_t - values
+		c_loss = td.pow(2)
+		
+		probs = F.softmax(logits, dim=1)
+		m = self.distribution(probs)
+		exp_v = m.log_prob(a) * td.detach().squeeze()
+		a_loss = -exp_v
+		total_loss = (c_loss + a_loss).mean()
+		return total_loss
+
 class Net(nn.Module):
-	def __init__(self, s_dim, a_dim, hidden=32):
+	def __init__(self, s_dim, a_dim, hidden=16):
 		super(Net, self).__init__()
 		self.s_dim = s_dim
 		self.a_dim = a_dim
@@ -33,6 +83,7 @@ class Net(nn.Module):
 		self.initialized = True
 
 	def forward(self, x):
+		#print(x.shape)
 		x = torch.flatten(x, start_dim=1)
 		#print(x.shape)
 		pi1 = torch.tanh(self.pi1(x))
@@ -108,11 +159,11 @@ class Worker(mp.Process):
 
 			buffer_s = [np.zeros(s[0][np.newaxis, :].shape) for _ in range(self.steps)]
 			while True:
-				if False: # and self.g_ep.value == self.episodes-2:
+				if True: # and self.g_ep.value == self.episodes-2:
 					print('rend')
 					print(self.env)
-					#self.env.render()
-					#os.sleep(1)
+					self.env.render()
+					time.sleep(1)
 
 				buffer_s.append(s[0])
 				s2 = torch.FloatTensor([buffer_s[-self.steps:]])
@@ -163,7 +214,7 @@ def train_agent(name,
 
 	opt = SharedAdam(gnet.parameters(), lr=1e-5, betas=(0.92, 0.999))	  # global optimizer
 	global_ep, global_ep_r, res_queue = mp.Value('i', 0), mp.Value('d', 0.), mp.Queue()
-	update_iter = 32
+	update_iter = 101
 	try:
 		mp.set_start_method('spawn', force=True)
 	except RuntimeError:
@@ -171,7 +222,7 @@ def train_agent(name,
 
 	# parallel training
 	# mp.set_start_method('spawn')
-	print('ta-start')
+	print('train agent start')
 	num = min(mp.cpu_count(), max_workers)
 
 	workers = [Worker(gnet, 
@@ -200,6 +251,7 @@ def train_agent(name,
 	while True:
 		#print(len(res_queue))
 		r = res_queue.get()
+		#print(r)
 		if r is not None:
 			res.append(r)
 			tq.update(1)

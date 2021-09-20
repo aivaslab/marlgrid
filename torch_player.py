@@ -35,19 +35,19 @@ if __name__ == '__main__':
     env_config1 =  {
         "env_class": "EmptyMultiGrid",
         "grid_size": 6,
-        "max_steps": 500,
+        "max_steps": 200,
         "respawn": True,
         "ghost_mode": True,
-        "reward_decay": False,
+        "reward_decay": True,
     }
 
     env_config2 =  {
         "env_class": "DoorKeyEnv",
-        "grid_size": 6,
+        "grid_size": 8,
         "max_steps": 250,
         "respawn": True,
         "ghost_mode": True,
-        "reward_decay": False,
+        "reward_decay": True,
     }
 
     env_config3 =  {
@@ -59,40 +59,61 @@ if __name__ == '__main__':
         "reward_decay": True,
     }
 
-    player_interface_config = {
-        "view_size": 6,
-        "view_offset": 1,
-        "view_tile_size": 5,
+    env_yy0 =  {
+        "env_class": "YummyYuckyEnv",
+        "grid_size": 9,
+        "max_steps": 100,
+        "respawn": True,
+        "ghost_mode": True,
+        "reward_decay": True,
+    }
+
+    env_cfb0 =  {
+        "env_class": "ContentFBEnv",
+        "grid_size": 11,
+        "max_steps": 100,
+        "respawn": True,
+        "ghost_mode": True,
+        "reward_decay": True,
+    }
+
+    yy_player_interface_config = {
+        "view_size": 7,
+        "view_offset": 3,
+        "view_tile_size": 3,
         "observation_style": "image",
         "see_through_walls": False,
         "color": "prestige"
     }
 
-    env_config = env_config1 # select from above
+    env_config = env_config2 # select from above
 
-    env_config['agents'] = [player_interface_config]
+    env_config['agents'] = [yy_player_interface_config]
 
     env = env_from_config(env_config)
 
     #human = dqlPlayer(env)
     device = 'cuda:0' #torch.device("cuda")
     channels = 3
-    view_size = 6*5
+    view_size = 5
+    view_tile_size = 3
     memory_length = 1
 
-    max_workers = 14
+    max_workers = 12
     num_workers = 0 # 0 for automatic
     num_checkpoints = 1
-    model = discrete_A3C.Net
-    margs = [channels*view_size*view_size*memory_length, 5]
-    human = Agent(AC_Network(model, margs, view_size=(6, 6), device=device))
+    model = discrete_A3C.CNet
+    num_actions = 3
+    #margs = [channels*memory_length*(view_size*view_tile_size)**2, num_actions]
+    margs = [4*4*8, num_actions]
+    human = Agent(AC_Network(model, margs, 1, device=device)) #1 is unused viewsize var
     total_eps = 10000
     data_path = 'data'
-    agent_name = 'agent'
+    agent_name = 'agent_yy0'
 
     if True: #agents[0].controller.trainable:
         path = os.path.join(data_path, agent_name)
-        if not os.path.isdir(path) or not os.path.isfile(os.path.join(path, 'a_weights_f.pth')): 
+        if True:# not os.path.isdir(path) or not os.path.isfile(os.path.join(path, 'a_weights_f.pth')): 
             if not os.path.isdir(path):
                 os.mkdir(path)
             print('training agent', agent_name)

@@ -1,7 +1,9 @@
 from ..base import MultiGridEnv, MultiGrid
 from ..objects import *
 from random import randrange
+#from enum import IntEnum
 
+#STATES = IntEnum("door_state", "open closed locked") #1, 2, 3
 
 class DoorKeyEnv(MultiGridEnv):
     """
@@ -36,7 +38,7 @@ class DoorKeyEnv(MultiGridEnv):
 
         # Place a door in the wall
         doorIdx = self._rand_int(1, width - 2)
-        self.put_obj(Door(color="yellow", state=Door.states.locked), splitIdx, doorIdx)
+        self.put_obj(Door(color="yellow", state=3), splitIdx, doorIdx)
 
         # Place a yellow key on the left side
         self.place_obj(obj=Key("yellow"), top=(0, 0), size=(splitIdx, height))

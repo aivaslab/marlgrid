@@ -36,15 +36,15 @@ envs = [(KnowGuessEnv, 0),
 		(CompFeedEnv, 0),
 		(CompFeedEnv2, 0),
 		(ContentFBEnv, 0),
-		(ContentFBEnv2, 0)
+		(YummyYuckyEnv, 0)
 		]
 
 num = 0
 curname = 'unnamed'
 for e in envs:
 	
-	env = e[0](grid_size=15)
-	env.init_agents(e[1], {'observation_style':'rich', 'view_size':13})
+	env = e[0](grid_size=7)
+	#env.init_agents(e[1], {'observation_style':'image', 'view_size':13})
 
 	if type(env).__name__ != curname:
 		num = 0

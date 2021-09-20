@@ -53,7 +53,7 @@ def record(global_ep, global_ep_r, ep_r, res_queue, name, printevery=1000):
 		global_ep.value += 1
 		temp_ep = global_ep.value
 	with global_ep_r.get_lock():
-		if global_ep_r.value == 0.:
+		if global_ep_r.value == 0.: #not moving average because of true thing
 			global_ep_r.value = ep_r
 		else:
 			global_ep_r.value = global_ep_r.value * 0.995 + ep_r * 0.005

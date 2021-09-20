@@ -1,12 +1,46 @@
 from ..base import MultiGridEnv, MultiGrid
 from ..objects import *
-
+import random
+import math
 
 class YummyYuckyEnv(MultiGridEnv):
     """
     """
 
-    mission = "use the key to open the door and then get to the goal"
+    mission = "yummy yucky"
+    metadata = {}
+
+    def _gen_grid(self, width, height):
+        # Create an empty grid
+        self.grid = MultiGrid((width, height))
+
+        chosen = 0#random.choice([0,1])
+        mirror1 = random.choice([-1,1])
+        mirror2 = random.choice([-1,1])
+
+        c = ['green', 'blue']
+
+        # Generate the surrounding walls
+        self.grid.wall_rect(0, 0, width, height)
+
+        for x in range(2):
+            r = 1 if x == chosen else -1
+            self.put_obj(Goal(color=c[x], reward=r), width//2 + 3*(x*2-1)*mirror1, height//2)
+
+        for x in range(2):
+            r = 1 if x == chosen else -1
+            self.put_obj(Goal(color=c[x], reward=r), width//2 + 3*(x*2-1), height//2-3*(x*2-1)*mirror2)
+            self.put_obj(Goal(color=c[not x], reward=r), width//2 + 3*(x*2-1), height//2+3*(x*2-1)*mirror2)
+
+        self.agent_spawn_kwargs = {"top":(1,1)}
+        self.place_agents(**self.agent_spawn_kwargs)
+
+
+class YummyYuckyEnv3(MultiGridEnv):
+    """
+    """
+
+    mission = "yummy yucky"
     metadata = {}
 
     def _gen_grid(self, width, height):
@@ -15,12 +49,9 @@ class YummyYuckyEnv(MultiGridEnv):
 
         # Generate the surrounding walls
         self.grid.wall_rect(0, 0, width, height)
-        for x in range(1,width-1):
-            self.put_obj(Wall(color="blue"), x, height//3)
-            self.put_obj(Wall(color="blue"), x, 2*height//3-1)
+        for x in range(4):
+            r = 1 if x == chosen else -1
+            self.put_obj(Goal(color=c[x], reward=r), width//2 + int(3*math.cos(x*3.14/2)), height//2 + int(3*math.sin(x*3.14/2)))
 
-        self.put_obj(Ball(color="green"), width//2, height//2)
-        self.put_obj(Goal(color="green", reward=1), width//4, height//2)
-        self.put_obj(Goal(color="green", reward=1), 3*width//4, height//2)
-
-        
+        self.agent_spawn_kwargs = {"color":"green", "view_offset": 0}
+        self.place_agents(**self.agent_spawn_kwargs)
