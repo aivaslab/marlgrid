@@ -25,6 +25,12 @@ COLORS = {
     "prestige": np.array([255,255,255]),
     "shadow": np.array([35,25,30]), # nice dark purpley color for cells agents can't see.
 }
+STATES = IntEnum("door_state", "open closed locked")
+'''STATES = {
+    "open": 0,
+    "closed": 1,
+    "locked": 2
+}'''
 
 # Used to map colors to integers
 COLOR_TO_IDX = dict({v: k for k, v in enumerate(COLORS.keys())})
@@ -322,40 +328,40 @@ class Ball(WorldObj):
         fill_coords(img, point_in_circle(0.5, 0.5, 0.31), COLORS[self.color])
 
 
+
 class Door(WorldObj):
-    states = IntEnum("door_state", "open closed locked")
 
     def can_overlap(self):
-        return self.state == self.states.open# and self.agent is None  # is open
+        return self.state == STATES.open# and self.agent is None  # is open
 
     def see_behind(self):
-        return self.state == self.states.open  # is open
+        return self.state == STATES.open  # is open
 
     def toggle(self, agent, pos):
-        if self.state == self.states.locked:  # is locked
+        if self.state == STATES.locked:  # is locked
             # If the agent is carrying a key of matching color
             if (
                 agent.carrying is not None
                 and isinstance(agent.carrying, Key)
                 and agent.carrying.color == self.color
             ):
-                self.state = self.states.closed
-        elif self.state == self.states.closed:  # is unlocked but closed
-            self.state = self.states.open
-        elif self.state == self.states.open:  # is open
-            self.state = self.states.closed
+                self.state = STATES.closed
+        elif self.state == STATES.closed:  # is unlocked but closed
+            self.state = STATES.open
+        elif self.state == STATES.open:  # is open
+            self.state = STATES.closed
         return True
 
     def render(self, img):
         c = COLORS[self.color]
 
-        if self.state == self.states.open:
+        if self.state == STATES.open:
             fill_coords(img, point_in_rect(0.88, 1.00, 0.00, 1.00), c)
             fill_coords(img, point_in_rect(0.92, 0.96, 0.04, 0.96), (0, 0, 0))
             return
 
         # Door frame and door
-        if self.state == self.states.locked:
+        if self.state == STATES.locked:
             fill_coords(img, point_in_rect(0.00, 1.00, 0.00, 1.00), c)
             fill_coords(img, point_in_rect(0.06, 0.94, 0.06, 0.94), 0.45 * np.array(c))
 
