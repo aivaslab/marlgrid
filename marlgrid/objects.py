@@ -231,6 +231,44 @@ class Goal(WorldObj):
 
     def render(self, img):
         fill_coords(img, point_in_rect(0, 1, 0, 1), COLORS[self.color])
+      
+      
+class SubGoal(WorldObj):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def can_overlap(self):
+        return True
+        
+    def can_pickup(self):
+    	return True
+
+    def str_render(self, dir=0):
+        return "SS"
+
+    def render(self, img):
+        fill_coords(img, point_in_rect(0, 1, 0, 1), COLORS[self.color])
+          
+class TerminalGoal(WorldObj):
+    def __init__(self, reward, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.reward_future = reward
+        self.reward = -1
+
+    def can_overlap(self):
+        return True
+
+    def get_reward(self, agent):
+    	if agent.carrying is not None and isinstance(agent.carrying, SubGoal)
+            return self.reward_future
+        else:
+            return reward
+
+    def str_render(self, dir=0):
+        return "FF"
+
+    def render(self, img):
+        fill_coords(img, point_in_rect(0, 1, 0, 1), COLORS[self.color])
 
 
 class Floor(WorldObj):
