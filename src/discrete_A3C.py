@@ -159,7 +159,7 @@ class Worker(mp.Process):
 
 			buffer_s = [np.zeros(s[0][np.newaxis, :].shape) for _ in range(self.steps)]
 			while True:
-				if True: # and self.g_ep.value == self.episodes-2:
+				if False: # and self.g_ep.value == self.episodes-2:
 					print('rend')
 					print(self.env)
 					self.env.render()

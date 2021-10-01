@@ -2,7 +2,7 @@ from ..base import MultiGridEnv
 
 from .empty import EmptyMultiGrid
 from .doorkey import DoorKeyEnv
-from .yummyyucky import YummyYuckyEnv
+from .yummyyucky import YummyYuckyEnv0, YummyYuckyEnv1
 from .cluttered import ClutteredMultiGrid
 from .goalcycle import ClutteredGoalCycleEnv
 from .viz_test import VisibilityTestEnv
