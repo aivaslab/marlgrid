@@ -5,6 +5,8 @@ import os
 import random
 import tqdm
 
+from IPython import display
+
 import marlgrid
 from marlgrid.agents_base import Agent, AC, AC_Deterministic, AC_Network
 from marlgrid.agents_torch import ConvLSTMA3C
