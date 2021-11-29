@@ -331,7 +331,8 @@ class MultiGrid:
         return img
 
 
-class MultiGridEnv(gym.Env):
+class MultiGridEnv(AECEnv):
+    metadata = {'render.modes': ['human'], "name": "multigridenv"}
     def __init__(
         self,
         agents = [],
@@ -362,6 +363,10 @@ class MultiGridEnv(gym.Env):
         self.agent_spawn_kwargs = agent_spawn_kwargs
         self.ghost_mode = ghost_mode
 
+        self.possible_agents = ["player_" + str(r) for r in range(2)]
+        self.agent_name_mapping = dict(zip(self.possible_agents, list(range(len(self.possible_agents)))))
+
+
         self.agents = []
         for agent in agents:
             self.add_agent(agent)
@@ -374,13 +379,13 @@ class MultiGridEnv(gym.Env):
         return [seed]
 
     @property
-    def action_space(self):
+    def action_spaces(self):
         return gym.spaces.Tuple(
             [agent.action_space for agent in self.agents]
         )
 
     @property
-    def observation_space(self):
+    def observation_spaces(self):
         return gym.spaces.Tuple(
             [agent.observation_space for agent in self.agents]
         )
@@ -424,8 +429,22 @@ class MultiGridEnv(gym.Env):
                 agent.activate()
 
         self.step_count = 0
-        obs = self.gen_obs()
-        return obs
+
+        self.agents = self.possible_agents[:]
+        self.rewards = {agent: 0 for agent in self.agents}
+        self._cumulative_rewards = {agent: 0 for agent in self.agents}
+        self.dones = {agent: False for agent in self.agents}
+        self.infos = {agent: {} for agent in self.agents}
+        self.state = {agent: NONE for agent in self.agents}
+        self.observations = {agent: NONE for agent in self.agents}
+        self.num_moves = 0
+        '''
+        Our agent_selector utility allows easy cyclic stepping through the agents list.
+        '''
+        self._agent_selector = agent_selector(self.agents)
+        self.agent_selection = self._agent_selector.next()
+        #obs = self.gen_obs()
+        #return obs
 
     def gen_obs_grid(self, agent):
         # If the agent is inactive, return an empty grid and a visibility mask that hides everything.
@@ -510,24 +529,26 @@ class MultiGridEnv(gym.Env):
                 print(" > ", a.color,'-', al)
             import pdb; pdb.set_trace()
 
-    def step(self, actions):
+    def step(self, action):
         # Spawn agents if it's time.
-        for agent in self.agents:
-            if not agent.active and not agent.done and self.step_count >= agent.spawn_delay:
-                self.place_obj(agent, **self.agent_spawn_kwargs)
-                agent.activate()
-                
-        assert len(actions) == len(self.agents)
+        if self.dones[self.agent_selection]:
+            # handles stepping an agent which is already done
+            # accepts a None action for the one agent, and moves the agent_selection to
+            # the next done agent,  or if there are no more done agents, to the next live agent
+            return self._was_done_step(action)
 
-        step_rewards = np.zeros((len(self.agents,)), dtype=np.float)
+        agent = self.agent_selection
 
-        self.step_count += 1
+        if not agent.active and not agent.done and self.step_count >= agent.spawn_delay:
+            self.place_obj(agent, **self.agent_spawn_kwargs)
+            agent.activate()
 
-        iter_agents = list(enumerate(zip(self.agents, actions)))
-        iter_order = np.arange(len(iter_agents))
-        self.np_random.shuffle(iter_order)
-        for shuffled_ix in iter_order:
-            agent_no, (agent, action) = iter_agents[shuffled_ix]
+        self._cumulative_rewards[agent] = 0
+        #self.state[self.agent_selection] = action
+
+
+        if True:
+            #agent_no, (agent, action) = iter_agents[shuffled_ix]
             agent.step_reward = 0
 
             if agent.active:
@@ -636,7 +657,7 @@ class MultiGridEnv(gym.Env):
         
         # If any of the agents individually are "done" (hit lava or in some cases a goal) 
         #   but the env requires respawning, then respawn those agents.
-        for agent in self.agents:
+        if True:
             if agent.done:
                 if self.respawn:
                     resting_place_obj = self.grid.get(*agent.pos)
@@ -660,9 +681,32 @@ class MultiGridEnv(gym.Env):
         # The episode overall is done if all the agents are done, or if it exceeds the step limit.
         done = (self.step_count >= self.max_steps) or all([agent.done for agent in self.agents])
 
-        obs = [self.gen_agent_obs(agent) for agent in self.agents]
+        #obs = self.gen_agent_obs(agent)
 
-        return obs, step_rewards, done, {}
+        if self._agent_selector.is_last():
+            # rewards for all agents are placed in the .rewards dictionary
+            self.rewards[agent] = 0 #reward
+
+            self.num_moves += 1
+            self.step_count += 1
+            # The dones dictionary must be updated for all players.
+            self.dones = {agent: self.num_moves >= NUM_ITERS for agent in self.agents}
+
+            # observe the current state
+            for i in self.agents:
+                self.observations[i] = self.state[self.agents[1 - self.agent_name_mapping[i]]]
+        else:
+            # necessary so that observe() returns a reasonable observation at all times.
+            self.state[self.agents[1 - self.agent_name_mapping[agent]]] = NONE
+            # no rewards are allocated until both players give an action
+            self._clear_rewards()
+
+        # selects the next agent.
+        self.agent_selection = self._agent_selector.next()
+        # Adds .rewards to ._cumulative_rewards
+        self._accumulate_rewards()
+
+        #return obs, step_rewards, done, {}
 
     def put_obj(self, obj, i, j):
         """
