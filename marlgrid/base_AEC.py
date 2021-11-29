@@ -14,9 +14,14 @@ from .objects import WorldObj, Wall, Goal, Lava, GridAgent, BonusTile, BulkObj, 
 from .agents import GridAgentInterface
 from .rendering import SimpleImageViewer
 from gym_minigrid.rendering import fill_coords, point_in_rect, downsample, highlight_img
+from gym.spaces import Discrete, Box
+from pettingzoo import AECEnv
+from pettingzoo.utils import agent_selector
+from pettingzoo.utils import wrappers
 
 TILE_PIXELS = 32
-
+NUM_ITERS = 100
+NONE = 4
 
 class ObjectRegistry:
     '''
@@ -82,11 +87,26 @@ def rotate_grid(grid, rot_k):
         return grid
 
 
+def MultiGridEnv():
+    #TODO: Check this is used?
+    '''
+    The env function wraps the environment in 3 wrappers by default. These
+    wrappers contain logic that is common to many pettingzoo environments.
+    We recommend you use at least the OrderEnforcingWrapper on your own environment
+    to provide sane error messages. You can find full documentation for these methods
+    elsewhere in the developer documentation.
+    '''
+    env = raw_MultiGridEnv()
+    #env = wrappers.CaptureStdoutWrapper(env)
+    #env = wrappers.AssertOutOfBoundsWrapper(env)
+    #env = wrappers.OrderEnforcingWrapper(env)
+    return env
+
 class MultiGrid:
 
     tile_cache = {}
 
-    def __init__(self, shape, obj_reg=None, orientation=0):
+    def __init__(self, shape=(11,11), obj_reg=None, orientation=0):
         self.orientation = orientation
         if isinstance(shape, tuple):
             self.width, self.height = shape
@@ -330,17 +350,33 @@ class MultiGrid:
                 )[...,None] # arcane magic.
             img = np.right_shift(img.astype(np.uint16)*8+hm*2, 3).clip(0,255).astype(np.uint8)
 
+        img = img.astype(np.uint8)
         return img
 
+def unused_raw_MultiGridEnv():
+    '''
+    To support the AEC API, the raw_env() function just uses the from_parallel
+    function to convert from a ParallelEnv to an AEC env
+    '''
+    env = para_MultiGridEnv()
+    env = from_parallel(env)
+    return env
 
-class MultiGridEnv(AECEnv):
-    metadata = {'render.modes': ['human'], "name": "multigridenv"}
+class para_MultiGridEnv(ParallelEnv):
+    '''
+    The metadata holds environment constants. From gym, we inherit the "render.modes",
+    metadata which specifies which modes can be put into the render() method.
+    At least human mode should be supported.
+    The "name" metadata allows the environment to be pretty printed.
+    '''
+    metadata = {'render.modes': ['human'], "name": "multigrid_alpha"}
+
     def __init__(
         self,
         agents = [],
         grid_size=None,
-        width=None,
-        height=None,
+        width=11,
+        height=11,
         max_steps=100,
         reward_decay=True,
         seed=1337,
@@ -348,7 +384,15 @@ class MultiGridEnv(AECEnv):
         ghost_mode=True,
         agent_spawn_kwargs = {}
     ):
+        '''
+        The init method takes in environment arguments and
+         should define the following attributes:
+        - possible_agents
+        - action_spaces
+        - observation_spaces
 
+        These attributes should not be changed after initialization.
+        '''
         if grid_size is not None:
             assert width == None and height == None
             width, height = grid_size, grid_size
@@ -364,150 +408,45 @@ class MultiGridEnv(AECEnv):
         self.seed(seed=seed)
         self.agent_spawn_kwargs = agent_spawn_kwargs
         self.ghost_mode = ghost_mode
+        self.agent_view_size=45
 
-        self.possible_agents = ["player_" + str(r) for r in range(2)]
-        self.agent_name_mapping = dict(zip(self.possible_agents, list(range(len(self.possible_agents)))))
+        self.agents = agents
+        self.grid = MultiGrid(shape=(width,height)) #added this, not sure where grid comes from in og
+
+        self.possible_agents = ["player_" + str(r) for r in range(len(agents))]
+        #self.agent_name_mapping = dict(zip(self.possible_agents, list(range(len(self.possible_agents)))))
+
+        # Gym spaces are defined and documented here: https://gym.openai.com/docs/#spaces
+        self.action_spaces = {agent: Discrete(5) for agent in self.possible_agents}
+        
+        
+        self.step_count = 0
+        #obshape = (45,45,3)
+        
+        self.observation_spaces = {agent: Box(
+            low=0,
+            high=255,
+            shape=(self.agent_view_size, self.agent_view_size, 3),
+            dtype='uint8'
+        ) for agent in self.possible_agents}
+        '''self.observation_space = Dict({
+            'image': self.observation_space
+        })'''
+        self.agent_instances = {agent for agent in agents}
+
+        self.instance_from_name = {name: agent for name, agent in zip(self.possible_agents, agents)}
 
 
-        self.agents = []
-        for agent in agents:
-            self.add_agent(agent)
+    '''def action_space(self, name):
+        return self.action_spaces[name]
 
-        self.reset()
+    def observation_space(self, name):
+        return self.observation_spaces[name]'''
 
     def seed(self, seed=1337):
         # Seed the random number generator
         self.np_random, _ = gym.utils.seeding.np_random(seed)
         return [seed]
-
-    @property
-    def action_spaces(self):
-        return gym.spaces.Tuple(
-            [agent.action_space for agent in self.agents]
-        )
-
-    @property
-    def observation_spaces(self):
-        return gym.spaces.Tuple(
-            [agent.observation_space for agent in self.agents]
-        )
-
-    '''@property
-    def action_space(self):
-        return gym.spaces.Tuple(
-            [agent.action_space for agent in self.agents]
-        )
-
-    @property
-    def observation_space(self):
-        return gym.spaces.Tuple(
-            [agent.observation_space for agent in self.agents]
-        )'''
-
-    @property
-    def num_agents(self):
-        return len(self.agents)
-    
-    def add_agent(self, agent_interface):
-        if isinstance(agent_interface, dict):
-            self.agents.append(GridAgentInterface(**agent_interface))
-        elif isinstance(agent_interface, GridAgentInterface):
-            self.agents.append(agent_interface)
-        else:
-            raise ValueError(
-                "To add an agent to a marlgrid environment, call add_agent with either a GridAgentInterface object "
-                " or a dictionary that can be used to initialize one.")
-
-    def reset(self, **kwargs):
-        for agent in self.agents:
-            agent.agents = []
-            agent.reset(new_episode=True)
-
-        self._gen_grid(self.width, self.height)
-
-        for agent in self.agents:
-            if agent.spawn_delay == 0:
-                self.place_obj(agent, **self.agent_spawn_kwargs)
-                agent.activate()
-
-        self.step_count = 0
-
-        self.agents = self.possible_agents[:]
-        self.rewards = {agent: 0 for agent in self.agents}
-        self._cumulative_rewards = {agent: 0 for agent in self.agents}
-        self.dones = {agent: False for agent in self.agents}
-        self.infos = {agent: {} for agent in self.agents}
-        self.state = {agent: NONE for agent in self.agents}
-        self.observations = {agent: NONE for agent in self.agents}
-        self.num_moves = 0
-        '''
-        Our agent_selector utility allows easy cyclic stepping through the agents list.
-        '''
-        self._agent_selector = agent_selector(self.agents)
-        self.agent_selection = self._agent_selector.next()
-        #obs = self.gen_obs()
-        #return obs
-
-    def gen_obs_grid(self, agent):
-        # If the agent is inactive, return an empty grid and a visibility mask that hides everything.
-        if not agent.active:
-            # below, not sure orientation is correct but as of 6/27/2020 that doesn't matter because
-            # agent views are usually square and this grid won't be used for anything.
-            grid = MultiGrid((agent.view_size, agent.view_size), orientation=agent.dir+1)
-            vis_mask = np.zeros((agent.view_size, agent.view_size), dtype=np.bool)
-            return grid, vis_mask
-
-        topX, topY, botX, botY = agent.get_view_exts()
-
-        grid = self.grid.slice(
-            topX, topY, agent.view_size, agent.view_size, rot_k=agent.dir + 1
-        )
-
-        # Process occluders and visibility
-        # Note that this incurs some slight performance cost
-        vis_mask = agent.process_vis(grid.opacity)
-
-        # Warning about the rest of the function:
-        #  Allows masking away objects that the agent isn't supposed to see.
-        #  But breaks consistency between the states of the grid objects in the parial views
-        #   and the grid objects overall.
-        if len(getattr(agent, 'hide_item_types', []))>0:
-            for i in range(grid.width):
-                for j in range(grid.height):
-                    item = grid.get(i,j)
-                    if (item is not None) and (item is not agent) and (item.type in agent.hide_item_types):
-                        if len(item.agents) > 0:
-                            grid.set(i,j,item.agents[0])
-                        else:
-                            grid.set(i,j,None)
-
-        return grid, vis_mask
-
-    def gen_agent_obs(self, agent):
-        """
-        Generate the agent's view (partially observable, low-resolution encoding)
-        """
-        grid, vis_mask = self.gen_obs_grid(agent)
-        grid_image = grid.render(tile_size=agent.view_tile_size, visible_mask=vis_mask, top_agent=agent)
-        if agent.observation_style=='image':
-            return grid_image
-        else:
-            ret = {'pov': grid_image}
-            if agent.observe_rewards:
-                ret['reward'] = getattr(agent, 'step_reward', 0)
-            if agent.observe_position:
-                agent_pos = agent.pos if agent.pos is not None else (0,0)
-                ret['position'] = np.array(agent_pos)/np.array([self.width, self.height], dtype=np.float)
-            if agent.observe_orientation:
-                agent_dir = agent.dir if agent.dir is not None else 0
-                ret['orientation'] = agent_dir
-            return ret
-
-    def gen_obs(self):
-        return [self.gen_agent_obs(agent) for agent in self.agents]
-
-    def __str__(self):
-        return self.grid.__str__()
 
     def check_agent_position_integrity(self, title=''):
         '''
@@ -531,15 +470,98 @@ class MultiGridEnv(AECEnv):
                 print(" > ", a.color,'-', al)
             import pdb; pdb.set_trace()
 
-    def step(self, action):
+    def observe(self, agent):
+        '''
+        Observe should return the observation of the specified agent. This function
+        should return a sane observation (though not necessarily the most up to date possible)
+        at any time after reset() is called.
+        '''
+        # observation of one agent is the previous state of the other
+        return np.array(self.observations[agent])
+
+    def close(self):
+        '''
+        Close should release any graphical displays, subprocesses, network connections
+        or any other environment data which should not be kept around after the
+        user is no longer using the environment.
+        '''
+        pass
+
+    def reset(self):
+        '''
+        Reset needs to initialize the following attributes
+        - agents
+        - rewards
+        - _cumulative_rewards
+        - dones
+        - infos
+        - agent_selection
+        And must set up the environment so that render(), step(), and observe()
+        can be called without issues.
+
+        Here it sets up the state dictionary which is used by step() and the observations dictionary which is used by step() and observe()
+        '''
+        self.agents = self.possible_agents[:]
+        self.rewards = {agent: 0 for agent in self.agents}
+        self._cumulative_rewards = {agent: 0 for agent in self.agents}
+        self.dones = {agent: False for agent in self.agents}
+        self.infos = {agent: {} for agent in self.agents}
+        self.state = {agent: NONE for agent in self.agents}
+        self.observations = {agent: self.gen_agent_obs(a) for agent, a in zip(self.agents, self.agent_instances)}
+        self.num_moves = 0
+        '''
+        Our agent_selector utility allows easy cyclic stepping through the agents list.
+        '''
+        self._agent_selector = agent_selector(self.agents)
+        self.agent_selection = self._agent_selector.next()
+
+        for agent in self.agents:
+            agent.agents = []
+            agent.reset(new_episode=True)
+
+        self._gen_grid(self.width, self.height)
+
+        for agent in self.agents:
+            if agent.spawn_delay == 0:
+                self.place_obj(agent, **self.agent_spawn_kwargs)
+                agent.activate()
+
+        return self.observations
+
+    def step(self, actions):
+
+        '''
+        step(action) takes in an action for the current agent (specified by
+        agent_selection) and needs to update
+        - rewards
+        - _cumulative_rewards (accumulating the rewards)
+        - dones
+        - infos
+        - agent_selection (to the next agent)
+        And any internal state used by observe() or render()
+        '''
+
+        # If a user passes in actions with no agents, then just return empty observations, etc.
+        if not actions:
+            self.agents = []
+            return {}, {}, {}, {}
+
+        #temp fix, TODO: check if done properly
+        env_done = False
+
+        #print('acts', actions)
         # Spawn agents if it's time.
         if self.dones[self.agent_selection]:
             # handles stepping an agent which is already done
             # accepts a None action for the one agent, and moves the agent_selection to
             # the next done agent,  or if there are no more done agents, to the next live agent
-            return self._was_done_step(action)
+            
+            #changed this from returning self._was_done_step(action)
+            #self.agent_selection = self._agent_selector.next()
+            return self.observations, self.rewards, self.dones, {}
 
-        agent = self.agent_selection
+        agent_name = self.agent_selection
+        agent = self.instance_from_name[agent_name]
 
         if not agent.active and not agent.done and self.step_count >= agent.spawn_delay:
             self.place_obj(agent, **self.agent_spawn_kwargs)
@@ -548,8 +570,9 @@ class MultiGridEnv(AECEnv):
         self._cumulative_rewards[agent] = 0
         #self.state[self.agent_selection] = action
 
-
-        if True:
+        for agent_name in actions:
+            action = actions[agent_name]
+            agent = self.instance_from_name[agent_name]
             #agent_no, (agent, action) = iter_agents[shuffled_ix]
             agent.step_reward = 0
 
@@ -557,6 +580,7 @@ class MultiGridEnv(AECEnv):
 
                 cur_pos = agent.pos[:]
                 cur_cell = self.grid.get(*cur_pos)
+                #print('cell:' , cur_cell)
                 fwd_pos = agent.front_pos[:]
                 fwd_cell = self.grid.get(*fwd_pos)
                 agent_moved = False
@@ -589,9 +613,12 @@ class MultiGridEnv(AECEnv):
                         # Remove agent from old cell
                         if cur_cell == agent:
                             self.grid.set(*cur_pos, None)
-                        else:
+                        elif cur_cell != None:
+                            # used to just be else... possibly issue because not spawning agents correctly
                             assert cur_cell.can_overlap()
-                            cur_cell.agents.remove(agent)
+                            #also this if used to not be here
+                            if agent in cur_cell.agents:
+                                cur_cell.agents.remove(agent)
 
                         # Add agent's agents to old cell
                         for left_behind in agent.agents:
@@ -612,12 +639,18 @@ class MultiGridEnv(AECEnv):
                             rwd = fwd_cell.get_reward(agent)
                             if bool(self.reward_decay):
                                 rwd *= (1.0-0.9*(self.step_count/self.max_steps))
-                            step_rewards[agent_no] += rwd
+                            
+                            # removed, unclear what for
+                            #step_rewards[agent_no] += rwd
+                            
                             agent.reward(rwd)
                             
 
                         if isinstance(fwd_cell, (Lava, Goal)):
                             agent.done = True
+                            #added below
+                            print('great success!')
+                            self.dones[agent_name] = True
 
                 # TODO: verify pickup/drop/toggle logic in an environment that 
                 #  supports the relevant interactions.
@@ -659,7 +692,7 @@ class MultiGridEnv(AECEnv):
         
         # If any of the agents individually are "done" (hit lava or in some cases a goal) 
         #   but the env requires respawning, then respawn those agents.
-        if True:
+        for agent in self.agent_instances:
             if agent.done:
                 if self.respawn:
                     resting_place_obj = self.grid.get(*agent.pos)
@@ -681,11 +714,12 @@ class MultiGridEnv(AECEnv):
                     agent.deactivate()
 
         # The episode overall is done if all the agents are done, or if it exceeds the step limit.
-        done = (self.step_count >= self.max_steps) or all([agent.done for agent in self.agents])
+        #done = (self.step_count >= self.max_steps) or all([agent.done for agent in self.agents])
 
-        #obs = self.gen_agent_obs(agent)
+        #self.observations[agentname] = self.gen_agent_obs(agent)
 
-        if self._agent_selector.is_last():
+        # made true since we update all agents
+        if True or self._agent_selector.is_last():
             # rewards for all agents are placed in the .rewards dictionary
             self.rewards[agent] = 0 #reward
 
@@ -695,20 +729,93 @@ class MultiGridEnv(AECEnv):
             self.dones = {agent: self.num_moves >= NUM_ITERS for agent in self.agents}
 
             # observe the current state
-            for i in self.agents:
-                self.observations[i] = self.gen_agent_obs(self.agents[1 - self.agent_name_mapping[i]])
+            for agentName, agent in zip(self.agents, self.agent_instances):
+                self.observations[agentName] = self.gen_agent_obs(agent)
         else:
             # necessary so that observe() returns a reasonable observation at all times.
-            self.state[self.agents[1 - self.agent_name_mapping[agent]]] = NONE
+            self.state[self.agents[0]] = NONE #todo expand this
             # no rewards are allocated until both players give an action
-            self._clear_rewards()
+            
+            rewards = {}
+            #self._clear_rewards()
 
         # selects the next agent.
         self.agent_selection = self._agent_selector.next()
         # Adds .rewards to ._cumulative_rewards
-        self._accumulate_rewards()
 
-        #return obs, step_rewards, done, {}
+        dones = {agent: env_done for agent in self.agents}
+
+        # current observation is just the other player's most recent action
+        observations = {self.agents[i]: self.gen_agent_obs(self.instance_from_name[self.agents[i]]) for i in range(len(self.agents))} #currently 0
+        rewards = {agent: 0 for agent in self.agents}
+        # typically there won't be any information in the infos, but there must
+        # still be an entry for each agent
+        infos = {agent: {} for agent in self.agents}
+
+        #self._accumulate_rewards()
+
+        return observations, rewards, dones, infos
+
+    def gen_obs_grid(self, agent):
+        # If the agent is inactive, return an empty grid and a visibility mask that hides everything.
+        if not agent.active:
+            # below, not sure orientation is correct but as of 6/27/2020 that doesn't matter because
+            # agent views are usually square and this grid won't be used for anything.
+            grid = MultiGrid((agent.view_size, agent.view_size), orientation=agent.dir+1)
+            vis_mask = np.zeros((agent.view_size, agent.view_size), dtype=np.bool)
+            return grid, vis_mask
+
+        topX, topY, botX, botY = agent.get_view_exts()
+
+        grid = self.grid.slice(
+            topX, topY, agent.view_size, agent.view_size, rot_k=agent.dir + 1
+        )
+
+        # Process occluders and visibility
+        # Note that this incurs some slight performance cost
+        vis_mask = agent.process_vis(grid.opacity)
+
+        # Warning about the rest of the function:
+        #  Allows masking away objects that the agent isn't supposed to see.
+        #  But breaks consistency between the states of the grid objects in the parial views
+        #   and the grid objects overall.
+        if len(getattr(agent, 'hide_item_types', []))>0:
+            for i in range(grid.width):
+                for j in range(grid.height):
+                    item = grid.get(i,j)
+                    if (item is not None) and (item is not agent) and (item.type in agent.hide_item_types):
+                        if len(item.agents) > 0:
+                            grid.set(i,j,item.agents[0])
+                        else:
+                            grid.set(i,j,None)
+
+        return grid, vis_mask
+    def gen_agent_obs(self, agent):
+        """
+        Generate the agent's view (partially observable, low-resolution encoding)
+        """
+        # issue: should return uint8 observations, not int64
+        grid, vis_mask = self.gen_obs_grid(agent)
+        grid_image = grid.render(tile_size=agent.view_tile_size, visible_mask=vis_mask, top_agent=agent)
+        if agent.observation_style=='image':
+            return grid_image
+        else:
+            ret = {'pov': grid_image}
+            if agent.observe_rewards:
+                ret['reward'] = getattr(agent, 'step_reward', 0)
+            if agent.observe_position:
+                agent_pos = agent.pos if agent.pos is not None else (0,0)
+                ret['position'] = np.array(agent_pos)/np.array([self.width, self.height], dtype=np.float)
+            if agent.observe_orientation:
+                agent_dir = agent.dir if agent.dir is not None else 0
+                ret['orientation'] = agent_dir
+            return ret
+
+    def gen_obs(self):
+        return [self.gen_agent_obs(agent) for agent in self.agent_instances]
+
+    def __str__(self):
+        return self.grid.__str__()
 
     def put_obj(self, obj, i, j):
         """
@@ -769,6 +876,7 @@ class MultiGridEnv(AECEnv):
         # warnings.warn("Placing agents with the function place_agents is deprecated.")
         pass
 
+
     def render(
         self,
         mode="human",
@@ -790,15 +898,18 @@ class MultiGridEnv(AECEnv):
                 self.window.close()
             return
 
-        if mode == "human" and not self.window:
+        if False and mode == "human" and not self.window:
             # from gym.envs.classic_control.rendering import SimpleImageViewer
 
             self.window = SimpleImageViewer(caption="Marlgrid")
-
+        #print('test')
         # Compute which cells are visible to the agent
         highlight_mask = np.full((self.width, self.height), False, dtype=np.bool)
-        for agent in self.agents:
+        #print('testuy')
+        for agentname, agent in zip(self.agents, self.agent_instances):
+            #print('agent', agent, 'an', agentname, 'a', agent[agentname])
             if agent.active:
+                #print('active')
                 xlow, ylow, xhigh, yhigh = agent.get_view_exts()
                 dxlow, dylow = max(0, 0-xlow), max(0, 0-ylow)
                 dxhigh, dyhigh = max(0, xhigh-self.grid.width), max(0, yhigh-self.grid.height)
@@ -809,8 +920,8 @@ class MultiGridEnv(AECEnv):
                     highlight_mask[xlow+dxlow:xhigh-dxhigh, ylow+dylow:yhigh-dyhigh] |= (
                         rotate_grid(b, a.orientation)[dxlow:(xhigh-xlow)-dxhigh, dylow:(yhigh-ylow)-dyhigh]
                     )
-
-
+        #print('test2')
+        #print('h', highlight) #true
         # Render the whole grid
         img = self.grid.render(
             tile_size, highlight_mask=highlight_mask if highlight else None
@@ -818,13 +929,15 @@ class MultiGridEnv(AECEnv):
         rescale = lambda X, rescale_factor=2: np.kron(
             X, np.ones((int(rescale_factor), int(rescale_factor), 1))
         )
+        #print('test3', img)
 
-        if show_agent_views:
+        if show_agent_views: 
+            #print('agent_views')
 
             target_partial_width = int(img.shape[0]*agent_col_width_frac-2*agent_col_padding_px)
             target_partial_height = (img.shape[1]-2*agent_col_padding_px)//max_agents_per_col
 
-            agent_views = [self.gen_agent_obs(agent) for agent in self.agents]
+            agent_views = [self.gen_agent_obs(agent) for agent in self.agent_instances]
             agent_views = [view['pov'] if isinstance(view, dict) else view for view in agent_views]
             agent_views = [rescale(view, min(target_partial_width/view.shape[0], target_partial_height/view.shape[1])) for view in agent_views]
             # import pdb; pdb.set_trace()
@@ -842,12 +955,14 @@ class MultiGridEnv(AECEnv):
                 cols.append(col)
 
             img = np.concatenate((img, *cols), axis=1)
-
-        if mode == "human":
+        
+        
+        '''if mode == "human":
             if not self.window.isopen:
                 self.window.imshow(img)
                 self.window.window.set_caption("Marlgrid")
             else:
-                self.window.imshow(img)
-
+                self.window.imshow(img)'''
+        
+        #print('returning', img)
         return img
