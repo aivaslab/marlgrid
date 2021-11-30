@@ -1,4 +1,5 @@
-from marlgrid.marlgrid.base_AEC import *
+from ..base_AEC import *
+from ..objects import *
 from random import randrange
 from pettingzoo.utils import wrappers, from_parallel
 
