@@ -1,15 +1,11 @@
+#@title Agents.py
 import gym
 import numpy as np
 from enum import IntEnum
 import warnings
 import numba
 
-'''from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout
-from tensorflow.keras.optimizers import Adam'''
 from collections import deque
-
-from .objects import GridAgent, BonusTile
 
 class GridAgentInterface(GridAgent):
     class actions(IntEnum):
