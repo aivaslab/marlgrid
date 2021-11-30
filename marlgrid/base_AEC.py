@@ -12,7 +12,7 @@ import warnings
 
 from .objects import WorldObj, Wall, Goal, Lava, GridAgent, BonusTile, BulkObj, COLORS
 from .agents import GridAgentInterface
-from .rendering import SimpleImageViewer
+#from .rendering import SimpleImageViewer
 from gym_minigrid.rendering import fill_coords, point_in_rect, downsample, highlight_img
 from gym.spaces import Discrete, Box
 from pettingzoo import AECEnv
