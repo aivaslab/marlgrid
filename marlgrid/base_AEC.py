@@ -515,13 +515,13 @@ class para_MultiGridEnv(ParallelEnv):
         self._agent_selector = agent_selector(self.agents)
         self.agent_selection = self._agent_selector.next()
 
-        for agent in self.agents:
+        for agent in self.agent_instances:
             agent.agents = []
             agent.reset(new_episode=True)
 
         self._gen_grid(self.width, self.height)
 
-        for agent in self.agents:
+        for agent in self.agent_instances:
             if agent.spawn_delay == 0:
                 self.place_obj(agent, **self.agent_spawn_kwargs)
                 agent.activate()
