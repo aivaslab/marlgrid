@@ -1,4 +1,4 @@
-from marlgrid.marlgrid.base_AEC
+from marlgrid.marlgrid.base_AEC import *
 from pettingzoo.utils import wrappers, from_parallel
 
 def DoorKeyEnv(**kwargs):
