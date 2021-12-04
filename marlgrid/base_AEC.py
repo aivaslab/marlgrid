@@ -430,9 +430,9 @@ class para_MultiGridEnv(ParallelEnv):
             dtype='uint8'
         ) for agent in self.possible_agents}
 
-        self.action_space = self.action_spaces[self.possible_agents[0]]
-        self.observation_space = self.observation_spaces[self.possible_agents[0]]
-
+        #self.action_space = self.action_spaces[self.possible_agents[0]]
+        #self.observation_space = self.observation_spaces[self.possible_agents[0]]
+        #cannot define these because it makes uncallable
         
         self.agent_instances = {agent for agent in agents}
 
