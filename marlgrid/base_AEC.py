@@ -443,12 +443,10 @@ class para_MultiGridEnv(ParallelEnv):
     def observation_space(self, name):
         return self.observation_spaces[name]
 
-    @property
     def action_space(self):
         return self.action_spaces[self.possible_agents[0]]
 
-    @property
-    def observation_space(self, name):
+    def observation_space(self):
         return self.observation_spaces[self.possible_agents[0]]
 
     def seed(self, seed=1337):
