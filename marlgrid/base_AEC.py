@@ -429,9 +429,11 @@ class para_MultiGridEnv(ParallelEnv):
             shape=(self.agent_view_size, self.agent_view_size, 3),
             dtype='uint8'
         ) for agent in self.possible_agents}
-        '''self.observation_space = Dict({
-            'image': self.observation_space
-        })'''
+
+        self.action_space = self.action_spaces[self.possible_agents[0]]
+        self.observation_space = self.observation_spaces[self.possible_agents[0]]
+
+        
         self.agent_instances = {agent for agent in agents}
 
         self.instance_from_name = {name: agent for name, agent in zip(self.possible_agents, agents)}
