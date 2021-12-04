@@ -437,11 +437,11 @@ class para_MultiGridEnv(ParallelEnv):
         self.instance_from_name = {name: agent for name, agent in zip(self.possible_agents, agents)}
 
 
-    '''def action_space(self, name):
+    def action_space(self, name):
         return self.action_spaces[name]
 
     def observation_space(self, name):
-        return self.observation_spaces[name]'''
+        return self.observation_spaces[name]
 
     def seed(self, seed=1337):
         # Seed the random number generator
