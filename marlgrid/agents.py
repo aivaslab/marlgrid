@@ -4,6 +4,7 @@ import numpy as np
 from enum import IntEnum
 import warnings
 import numba
+from .objects import *
 
 from collections import deque
 
