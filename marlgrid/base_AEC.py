@@ -378,7 +378,7 @@ class para_MultiGridEnv(ParallelEnv):
         width=11,
         height=11,
         max_steps=100,
-        reward_decay=True,
+        reward_decay=False,
         seed=1337,
         respawn=False,
         ghost_mode=True,
