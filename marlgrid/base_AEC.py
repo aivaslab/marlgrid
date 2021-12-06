@@ -572,7 +572,7 @@ class para_MultiGridEnv(ParallelEnv):
             action = actions[agent_name]
             agent = self.instance_from_name[agent_name]
             #agent_no, (agent, action) = iter_agents[shuffled_ix]
-            agent.step_reward = 0
+            agent.step_reward = -0.1
 
             if agent.active:
 
@@ -644,7 +644,7 @@ class para_MultiGridEnv(ParallelEnv):
                             
                             agent.reward(rwd)
                         else:
-                            self.rewards[agent_name] = -0.1
+                            self.rewards[agent_name] = agent.step_reward
                             
 
                         if isinstance(fwd_cell, (Lava, Goal)):
@@ -743,6 +743,8 @@ class para_MultiGridEnv(ParallelEnv):
         # Adds .rewards to ._cumulative_rewards
 
         dones = {agent: env_done for agent in self.agents}
+        if env_done:
+            self.rewards = {agent: -10 for agent in self.agents}
 
         # current observation is just the other player's most recent action
         observations = {self.agents[i]: self.gen_agent_obs(self.instance_from_name[self.agents[i]]) for i in range(len(self.agents))} #currently 0
