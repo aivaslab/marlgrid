@@ -512,8 +512,9 @@ class para_MultiGridEnv(ParallelEnv):
         self._agent_selector = agent_selector(self.agents)
         self.agent_selection = self._agent_selector.next()
 
-        for agent in self.agent_instances:
+        for name, agent in zip(self.agents, self.agent_instances):
             agent.agents = []
+            agent.name = name
             agent.reset(new_episode=True)
 
         self._gen_grid(self.width, self.height)
@@ -718,7 +719,7 @@ class para_MultiGridEnv(ParallelEnv):
         # made true since we update all agents
         if True or self._agent_selector.is_last():
             # rewards for all agents are placed in the .rewards dictionary
-            self.rewards[agent] = 0 #reward
+            for agent in self.agent_instances:
 
             self.num_moves += 1
             self.step_count += 1
@@ -726,8 +727,9 @@ class para_MultiGridEnv(ParallelEnv):
             self.dones = {agent: self.num_moves >= NUM_ITERS for agent in self.agents}
 
             # observe the current state
-            for agentName, agent in zip(self.agents, self.agent_instances):
-                self.observations[agentName] = self.gen_agent_obs(agent)
+            for agent_name, agent in zip(self.agents, self.agent_instances):
+                self.observations[agent_name] = self.gen_agent_obs(agent)
+                self.rewards[agent_name] = agent.reward #reward
         else:
             # necessary so that observe() returns a reasonable observation at all times.
             self.state[self.agents[0]] = NONE #todo expand this
@@ -744,7 +746,7 @@ class para_MultiGridEnv(ParallelEnv):
 
         # current observation is just the other player's most recent action
         observations = {self.agents[i]: self.gen_agent_obs(self.instance_from_name[self.agents[i]]) for i in range(len(self.agents))} #currently 0
-        rewards = {agent: 0 for agent in self.agents}
+        rewards = self.rewards #{agent: 0 for agent in self.agents}
         # typically there won't be any information in the infos, but there must
         # still be an entry for each agent
         infos = {agent: {} for agent in self.agents}
