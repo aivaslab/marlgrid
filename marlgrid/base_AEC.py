@@ -719,8 +719,6 @@ class para_MultiGridEnv(ParallelEnv):
         # made true since we update all agents
         if True or self._agent_selector.is_last():
             # rewards for all agents are placed in the .rewards dictionary
-            for agent in self.agent_instances:
-
             self.num_moves += 1
             self.step_count += 1
             # The dones dictionary must be updated for all players.
