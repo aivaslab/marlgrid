@@ -643,12 +643,13 @@ class para_MultiGridEnv(ParallelEnv):
                             self.rewards[agent_name] = rwd
                             
                             agent.reward(rwd)
+                        else:
+                            self.rewards[agent_name] = -0.1
                             
 
                         if isinstance(fwd_cell, (Lava, Goal)):
                             agent.done = True
                             #added below
-                            print('great success!')
                             self.dones[agent_name] = True
 
                 # TODO: verify pickup/drop/toggle logic in an environment that 
