@@ -419,7 +419,7 @@ class para_MultiGridEnv(ParallelEnv):
         # Gym spaces are defined and documented here: https://gym.openai.com/docs/#spaces
         self.action_spaces = {agent: Discrete(5) for agent in self.possible_agents}
         
-        
+        self.env_done = False
         self.step_count = 0
         #obshape = (45,45,3)
         
