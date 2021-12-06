@@ -637,7 +637,7 @@ class para_MultiGridEnv(ParallelEnv):
                         if hasattr(fwd_cell, 'get_reward'):
                             rwd = fwd_cell.get_reward(agent)
                             if bool(self.reward_decay):
-                                rwd *= (1.0-0.9*(self.step_count/self.max_steps))
+                                rwd *= (100.0-0.9*(self.step_count/self.max_steps))
                             
                             # removed, unclear what for
                             #step_rewards[agent_no] += rwd
@@ -716,10 +716,7 @@ class para_MultiGridEnv(ParallelEnv):
                 else: # if the agent shouldn't be respawned, then deactivate it.
                     agent.deactivate()
 
-        # The episode overall is done if all the agents are done, or if it exceeds the step limit.
-        #done = (self.step_count >= self.max_steps) or all([agent.done for agent in self.agents])
-        if self.num_moves >= self.max_steps:
-            self.env_done = True
+        
 
         #self.observations[agentname] = self.gen_agent_obs(agent)
 
@@ -746,6 +743,11 @@ class para_MultiGridEnv(ParallelEnv):
         # selects the next agent.
         self.agent_selection = self._agent_selector.next()
         # Adds .rewards to ._cumulative_rewards
+
+        # The episode overall is done if all the agents are done, or if it exceeds the step limit.
+        #done = (self.step_count >= self.max_steps) or all([agent.done for agent in self.agents])
+        if self.num_moves >= self.max_steps:
+            self.env_done = True
 
         dones = {agent: self.env_done for agent in self.agents}
         if self.env_done == True:
