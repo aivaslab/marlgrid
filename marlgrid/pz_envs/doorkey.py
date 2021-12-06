@@ -30,11 +30,11 @@ class para_DoorKeyEnv(para_MultiGridEnv):
 
         # Create a vertical splitting wall
         splitIdx = self._rand_int(3, width - 2)
-        #self.grid.vert_wall(splitIdx, 1)
+        self.grid.vert_wall(splitIdx, 1)
 
         # Place the agent at a random position and orientation
         # on the left side of the splitting wall
-        self.place_agent(size=(splitIdx, height))
+        #self.place_agent(size=(splitIdx, height))
 
         # Place a door in the wall
         doorIdx = self._rand_int(1, width - 2)
