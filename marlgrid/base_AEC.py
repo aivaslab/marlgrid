@@ -747,7 +747,7 @@ class para_MultiGridEnv(ParallelEnv):
 
         # The episode overall is done if all the agents are done, or if it exceeds the step limit.
         #done = (self.step_count >= self.max_steps) or all([agent.done for agent in self.agents])
-        if self.num_moves > self.max_steps:
+        if self.num_moves >= self.max_steps:
             self.env_done = True
 
         dones = {agent: self.env_done for agent in self.agents}
