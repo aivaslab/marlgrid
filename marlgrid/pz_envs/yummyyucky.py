@@ -1,4 +1,10 @@
-class YummyYuckyEnv0(MultiGridEnv):
+from ..base_AEC import *
+from ..objects import *
+from random import randrange
+import random
+import math
+
+class YummyYuckyEnv0(para_MultiGridEnv):
     """
     """
 
@@ -26,7 +32,7 @@ class YummyYuckyEnv0(MultiGridEnv):
         self.place_agents(**self.agent_spawn_kwargs)
 
 
-class YummyYuckyEnv1(MultiGridEnv):
+class YummyYuckyEnv1(para_MultiGridEnv):
     """
     """
 
@@ -59,7 +65,7 @@ class YummyYuckyEnv1(MultiGridEnv):
         self.place_agents(**self.agent_spawn_kwargs)
 
 
-class YummyYuckyEnv3(MultiGridEnv):
+class YummyYuckyEnv3(para_MultiGridEnv):
     """
     """
 

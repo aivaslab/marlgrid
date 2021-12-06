@@ -1,5 +1,10 @@
+from ..base_AEC import *
+from ..objects import *
+from random import randrange
+import random
+import math
 
-class KnowGuessEnv(MultiGridEnv):
+class KnowGuessEnv(para_MultiGridEnv):
     """
     """
 
@@ -27,7 +32,7 @@ class KnowGuessEnv(MultiGridEnv):
         self.put_obj(Goal(color="green", reward=1), width//4, height//2)
         self.put_obj(Goal(color="green", reward=1), 3*width//4, height//2)
 
-class KnowGuessEnv2(MultiGridEnv):
+class KnowGuessEnv2(para_MultiGridEnv):
     """
     RL version of above
     """

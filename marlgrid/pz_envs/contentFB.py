@@ -1,3 +1,8 @@
+from ..base_AEC import *
+from ..objects import *
+from random import randrange
+import random
+import math
 
 class ContentFBEnv(para_MultiGridEnv):
     """
@@ -33,7 +38,7 @@ class ContentFBEnv(para_MultiGridEnv):
         self.agent_spawn_kwargs = {'top':(1,1)}
         self.place_agents(**self.agent_spawn_kwargs)
 
-class ContentFBEnv2(MultiGridEnv):
+class ContentFBEnv2(para_MultiGridEnv):
     """
     Environment with a door and key, sparse reward.
     Similar to DoorKeyEnv in 
