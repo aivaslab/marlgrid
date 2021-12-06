@@ -727,7 +727,7 @@ class para_MultiGridEnv(ParallelEnv):
             # observe the current state
             for agent_name, agent in zip(self.agents, self.agent_instances):
                 self.observations[agent_name] = self.gen_agent_obs(agent)
-                self.rewards[agent_name] = agent.reward #reward
+                self.rewards[agent_name] = agent.rew #reward
         else:
             # necessary so that observe() returns a reasonable observation at all times.
             self.state[self.agents[0]] = NONE #todo expand this
@@ -745,11 +745,12 @@ class para_MultiGridEnv(ParallelEnv):
         # current observation is just the other player's most recent action
         observations = {self.agents[i]: self.gen_agent_obs(self.instance_from_name[self.agents[i]]) for i in range(len(self.agents))} #currently 0
         rewards = self.rewards #{agent: 0 for agent in self.agents}
+        print(rewards)
         # typically there won't be any information in the infos, but there must
         # still be an entry for each agent
         infos = {agent: {} for agent in self.agents}
 
-        self._accumulate_rewards()
+        #self._accumulate_rewards() #not defined 
 
         return observations, rewards, dones, infos
 
