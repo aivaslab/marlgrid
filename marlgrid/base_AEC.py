@@ -572,8 +572,8 @@ class para_MultiGridEnv(ParallelEnv):
             action = actions[agent_name]
             agent = self.instance_from_name[agent_name]
             #agent_no, (agent, action) = iter_agents[shuffled_ix]
-            agent.step_reward = -0.1
-            self.rewards[agent_name] = -0.1
+            agent.step_reward = 0
+            self.rewards[agent_name] = 0
 
             if agent.active:
 
@@ -637,10 +637,11 @@ class para_MultiGridEnv(ParallelEnv):
                         if hasattr(fwd_cell, 'get_reward'):
                             rwd = fwd_cell.get_reward(agent)
                             if bool(self.reward_decay):
-                                rwd *= (100.0-0.9*(self.step_count/self.max_steps))
+                                rwd *= (1.0-0.9*(self.step_count/self.max_steps))
                             
                             # removed, unclear what for
                             #step_rewards[agent_no] += rwd
+                            agent.step_reward = rwd
                             self.rewards[agent_name] = rwd
                             self._cumulative_rewards[agent_name] += rwd
                             

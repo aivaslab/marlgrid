@@ -26,7 +26,7 @@ class para_DoorKeyEnv(para_MultiGridEnv):
         self.grid.wall_rect(0, 0, width, height)
 
         # Place a goal in the bottom-right corner
-        self.put_obj(Goal(color="green", reward=1), width - 2, height - 2)
+        self.put_obj(Goal(color="green", reward=100), width - 2, height - 2)
 
         # Create a vertical splitting wall
         splitIdx = self._rand_int(3, width - 2)
