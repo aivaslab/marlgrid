@@ -746,7 +746,7 @@ class para_MultiGridEnv(ParallelEnv):
         # current observation is just the other player's most recent action
         observations = {self.agents[i]: self.gen_agent_obs(self.instance_from_name[self.agents[i]]) for i in range(len(self.agents))} #currently 0
         rewards = self.rewards #{agent: 0 for agent in self.agents}
-        print(rewards)
+
         # typically there won't be any information in the infos, but there must
         # still be an entry for each agent
         infos = {agent: {} for agent in self.agents}
