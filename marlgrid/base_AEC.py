@@ -749,7 +749,7 @@ class para_MultiGridEnv(ParallelEnv):
         # still be an entry for each agent
         infos = {agent: {} for agent in self.agents}
 
-        #self._accumulate_rewards()
+        self._accumulate_rewards()
 
         return observations, rewards, dones, infos
 
