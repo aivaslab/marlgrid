@@ -640,6 +640,7 @@ class para_MultiGridEnv(ParallelEnv):
                             
                             # removed, unclear what for
                             #step_rewards[agent_no] += rwd
+                            self.rewards[agent_name] = rwd
                             
                             agent.reward(rwd)
                             
@@ -727,7 +728,7 @@ class para_MultiGridEnv(ParallelEnv):
             # observe the current state
             for agent_name, agent in zip(self.agents, self.agent_instances):
                 self.observations[agent_name] = self.gen_agent_obs(agent)
-                self.rewards[agent_name] = agent.rew #reward
+                #self.rewards[agent_name] = agent.rew #reward
         else:
             # necessary so that observe() returns a reasonable observation at all times.
             self.state[self.agents[0]] = NONE #todo expand this
