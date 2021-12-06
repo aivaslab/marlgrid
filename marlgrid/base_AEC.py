@@ -746,7 +746,7 @@ class para_MultiGridEnv(ParallelEnv):
         # Adds .rewards to ._cumulative_rewards
 
         dones = {agent: env_done for agent in self.agents}
-        if env_done == True:
+        if self.env_done == True:
             self.rewards = {agent: -10 for agent in self.agents}
         self._cumulative_rewards = {agent: self._cumulative_rewards[agent] + self.rewards[agent] for agent in self.agents}
 
