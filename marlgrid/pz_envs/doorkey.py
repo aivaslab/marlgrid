@@ -1,5 +1,4 @@
 
-
 class para_DoorKeyEnv(para_MultiGridEnv):
     """
     Environment with a door and key, sparse reward.
