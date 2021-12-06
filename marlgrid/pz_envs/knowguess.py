@@ -72,7 +72,7 @@ class KnowGuessEnv2(para_MultiGridEnv):
         self.put_obj(Goal(color="green", reward=1), 6, height//2)
 
 
-class KnowGuessEnv3(MultiGridEnv):
+class KnowGuessEnv3(para_MultiGridEnv):
     """
     Visor
     """
