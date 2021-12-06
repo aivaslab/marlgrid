@@ -642,7 +642,9 @@ class para_MultiGridEnv(ParallelEnv):
                             # removed, unclear what for
                             #step_rewards[agent_no] += rwd
                             self.rewards[agent_name] = rwd
+                            self._cumulative_rewards[agent_name] += rwd
                             
+                            print('reward', rwd)
                             agent.reward(rwd)
                         else:
                             self.rewards[agent_name] = agent.step_reward
