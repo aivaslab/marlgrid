@@ -573,6 +573,7 @@ class para_MultiGridEnv(ParallelEnv):
             agent = self.instance_from_name[agent_name]
             #agent_no, (agent, action) = iter_agents[shuffled_ix]
             agent.step_reward = -0.1
+            self.rewards[agent_name] = -0.1
 
             if agent.active:
 
@@ -715,6 +716,8 @@ class para_MultiGridEnv(ParallelEnv):
 
         # The episode overall is done if all the agents are done, or if it exceeds the step limit.
         #done = (self.step_count >= self.max_steps) or all([agent.done for agent in self.agents])
+        if self.step_count >= self.max_steps:
+            env_done = True
 
         #self.observations[agentname] = self.gen_agent_obs(agent)
 
@@ -745,6 +748,7 @@ class para_MultiGridEnv(ParallelEnv):
         dones = {agent: env_done for agent in self.agents}
         if env_done:
             self.rewards = {agent: -10 for agent in self.agents}
+        self._cumulative_rewards = {agent: self._cumulative_rewards[agent] + self.rewards[agent] for agent in self.agents}
 
         # current observation is just the other player's most recent action
         observations = {self.agents[i]: self.gen_agent_obs(self.instance_from_name[self.agents[i]]) for i in range(len(self.agents))} #currently 0
