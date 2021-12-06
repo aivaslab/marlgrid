@@ -506,6 +506,7 @@ class para_MultiGridEnv(ParallelEnv):
         self.state = {agent: NONE for agent in self.agents}
         self.observations = {agent: self.gen_agent_obs(a) for agent, a in zip(self.agents, self.agent_instances)}
         self.num_moves = 0
+        self.env_done = False
         '''
         Our agent_selector utility allows easy cyclic stepping through the agents list.
         '''
@@ -544,8 +545,7 @@ class para_MultiGridEnv(ParallelEnv):
             self.agents = []
             return {}, {}, {}, {}
 
-        #temp fix, TODO: check if done properly
-        env_done = False
+        
 
         #print('acts', actions)
         # Spawn agents if it's time.
@@ -717,7 +717,7 @@ class para_MultiGridEnv(ParallelEnv):
         # The episode overall is done if all the agents are done, or if it exceeds the step limit.
         #done = (self.step_count >= self.max_steps) or all([agent.done for agent in self.agents])
         if self.step_count >= self.max_steps:
-            env_done = True
+            self.env_done = True
 
         #self.observations[agentname] = self.gen_agent_obs(agent)
 
@@ -746,7 +746,7 @@ class para_MultiGridEnv(ParallelEnv):
         # Adds .rewards to ._cumulative_rewards
 
         dones = {agent: env_done for agent in self.agents}
-        if env_done:
+        if env_done == True:
             self.rewards = {agent: -10 for agent in self.agents}
         self._cumulative_rewards = {agent: self._cumulative_rewards[agent] + self.rewards[agent] for agent in self.agents}
 
