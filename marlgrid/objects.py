@@ -159,6 +159,10 @@ class GridAgent(WorldObj):
 		tri_fn = rotate_fn(tri_fn, cx=0.5, cy=0.5, theta=0.5 * np.pi * (self.dir))
 		fill_coords(img, tri_fn, COLORS[self.color])
 
+		if agent.carrying is not None:
+			agent.carrying.render(img)
+
+
 
 class BulkObj(WorldObj, metaclass=RegisteredObjectType):
 	# Todo: special behavior for hash, eq if the object has an agent.
