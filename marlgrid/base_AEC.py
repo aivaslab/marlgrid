@@ -417,7 +417,7 @@ class para_MultiGridEnv(ParallelEnv):
         #self.agent_name_mapping = dict(zip(self.possible_agents, list(range(len(self.possible_agents)))))
 
         # Gym spaces are defined and documented here: https://gym.openai.com/docs/#spaces
-        self.action_spaces = {agent: Discrete(5) for agent in self.possible_agents}
+        self.action_spaces = {agent: Discrete(7) for agent in self.possible_agents}
         
         self.env_done = False
         self.step_count = 0
