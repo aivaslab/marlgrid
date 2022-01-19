@@ -20,7 +20,7 @@ def EmptyMultiGrid(**kwargs):
 
 class raw_EmptyMultiGrid(para_MultiGridEnv):
     mission = "get to the green square"
-    metadata = {}
+    metadata = {'render.modes': ['human', 'rgb_array'], "name": "doorkey"}
 
     def _gen_grid(self, width, height):
         self.grid = MultiGrid((width, height))
