@@ -383,6 +383,7 @@ class para_MultiGridEnv(ParallelEnv):
         respawn=False,
         ghost_mode=True,
         step_reward=0,
+        done_reward=-10,
         agent_spawn_kwargs = {}
     ):
         '''
@@ -407,6 +408,7 @@ class para_MultiGridEnv(ParallelEnv):
         self.max_steps = max_steps
         self.reward_decay = reward_decay
         self.step_reward = step_reward
+        self.done_reward = done_reward
         self.seed(seed=seed)
         self.agent_spawn_kwargs = agent_spawn_kwargs
         self.ghost_mode = ghost_mode
@@ -754,7 +756,7 @@ class para_MultiGridEnv(ParallelEnv):
 
         dones = {agent: self.env_done for agent in self.agents}
         if self.env_done == True:
-            self.rewards = {agent: -10 for agent in self.agents}
+            self.rewards = {agent: self.done_reward for agent in self.agents}
         self._cumulative_rewards = {agent: self._cumulative_rewards[agent] + self.rewards[agent] for agent in self.agents}
 
         # current observation is just the other player's most recent action
