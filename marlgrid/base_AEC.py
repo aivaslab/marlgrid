@@ -382,6 +382,7 @@ class para_MultiGridEnv(ParallelEnv):
         seed=1337,
         respawn=False,
         ghost_mode=True,
+        step_reward=0,
         agent_spawn_kwargs = {}
     ):
         '''
@@ -405,6 +406,7 @@ class para_MultiGridEnv(ParallelEnv):
         self.height = height
         self.max_steps = max_steps
         self.reward_decay = reward_decay
+        self.step_reward = step_reward
         self.seed(seed=seed)
         self.agent_spawn_kwargs = agent_spawn_kwargs
         self.ghost_mode = ghost_mode
@@ -572,8 +574,8 @@ class para_MultiGridEnv(ParallelEnv):
             action = actions[agent_name]
             agent = self.instance_from_name[agent_name]
             #agent_no, (agent, action) = iter_agents[shuffled_ix]
-            agent.step_reward = 0
-            self.rewards[agent_name] = 0
+            agent.step_reward = self.step_reward
+            self.rewards[agent_name] = agent.step_reward
 
             if agent.active:
 
