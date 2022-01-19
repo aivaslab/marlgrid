@@ -505,6 +505,7 @@ class para_MultiGridEnv(ParallelEnv):
         self.agents = self.possible_agents[:]
         self.rewards = {agent: 0 for agent in self.agents}
         self._cumulative_rewards = {agent: 0 for agent in self.agents}
+        self.has_terminated = {agent: False for agent in self.agents}
         self.dones = {agent: False for agent in self.agents}
         self.infos = {agent: {} for agent in self.agents}
         self.state = {agent: NONE for agent in self.agents}
@@ -648,6 +649,7 @@ class para_MultiGridEnv(ParallelEnv):
                             agent.step_reward = rwd
                             self.rewards[agent_name] = rwd
                             self._cumulative_rewards[agent_name] += rwd
+                            self.has_terminated[agent_name] = True
                             
                             #print('reward', rwd)
                             agent.reward(rwd)
@@ -756,7 +758,11 @@ class para_MultiGridEnv(ParallelEnv):
 
         dones = {agent: self.env_done for agent in self.agents}
         if self.env_done == True:
-            self.rewards = {agent: self.done_reward for agent in self.agents}
+            for agent in self.agents:
+                if not self.has_terminated[agent]:
+                    #if reached end without getting any reward
+                    self.rewards[agent] = self.done_reward
+            #self.rewards = {agent: self.done_reward for agent in self.agents}
         self._cumulative_rewards = {agent: self._cumulative_rewards[agent] + self.rewards[agent] for agent in self.agents}
 
         # current observation is just the other player's most recent action
