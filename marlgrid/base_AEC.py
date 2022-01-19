@@ -577,8 +577,8 @@ class para_MultiGridEnv(ParallelEnv):
             action = actions[agent_name]
             agent = self.instance_from_name[agent_name]
             #agent_no, (agent, action) = iter_agents[shuffled_ix]
-            agent.step_reward = self.step_reward
-            self.rewards[agent_name] = agent.step_reward
+            agent.step_reward = 0
+            self.rewards[agent_name] = 0
 
             if agent.active:
 
@@ -654,7 +654,8 @@ class para_MultiGridEnv(ParallelEnv):
                             #print('reward', rwd)
                             agent.reward(rwd)
                         else:
-                            self.rewards[agent_name] = agent.step_reward
+                            self.rewards[agent_name] = self.step_reward
+                            agent.step_reward = self.step_reward
                             
 
                         if isinstance(fwd_cell, (Lava, Goal)):
