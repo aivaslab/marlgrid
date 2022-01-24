@@ -650,6 +650,7 @@ class para_MultiGridEnv(ParallelEnv):
                             self.rewards[agent_name] = rwd
                             self._cumulative_rewards[agent_name] += rwd
                             self.has_terminated[agent_name] = True
+                            self.dones[agent_name] = True
                             
                             #print('reward', rwd)
                             agent.reward(rwd)
@@ -703,6 +704,7 @@ class para_MultiGridEnv(ParallelEnv):
         
         # If any of the agents individually are "done" (hit lava or in some cases a goal) 
         #   but the env requires respawning, then respawn those agents.
+        '''
         for agent in self.agent_instances:
             if agent.done:
                 if self.respawn:
@@ -722,7 +724,7 @@ class para_MultiGridEnv(ParallelEnv):
                     self.place_obj(agent, **self.agent_spawn_kwargs)
                     agent.activate()
                 else: # if the agent shouldn't be respawned, then deactivate it.
-                    agent.deactivate()
+                    agent.deactivate()'''
 
         
 
@@ -734,7 +736,7 @@ class para_MultiGridEnv(ParallelEnv):
         #self.num_moves += 1
         self.step_count += 1
         # The dones dictionary must be updated for all players.
-        self.dones = {agent: self.step_count >= NUM_ITERS for agent in self.agents}
+        self.dones = {agent: self.step_count >= self.max_steps for agent in self.agents}
 
         # observe the current state
         for agent_name, agent in zip(self.agents, self.agent_instances):
@@ -751,7 +753,7 @@ class para_MultiGridEnv(ParallelEnv):
         if self.step_count >= self.max_steps:
             self.env_done = True
 
-        dones = {agent: self.env_done for agent in self.agents}
+        #dones = {agent: self.env_done for agent in self.agents}
         if self.env_done == True:
             for agent in self.agents:
                 if not self.has_terminated[agent]:
@@ -761,8 +763,10 @@ class para_MultiGridEnv(ParallelEnv):
         self._cumulative_rewards = {agent: self._cumulative_rewards[agent] + self.rewards[agent] for agent in self.agents}
 
         # current observation is just the other player's most recent action
-        observations = {self.agents[i]: self.gen_agent_obs(self.instance_from_name[self.agents[i]]) for i in range(len(self.agents))} #currently 0
-        rewards = self.rewards #{agent: 0 for agent in self.agents}
+        
+        #redundant?
+        #observations = {self.agents[i]: self.gen_agent_obs(self.instance_from_name[self.agents[i]]) for i in range(len(self.agents))} #currently 0
+        #rewards = self.rewards #{agent: 0 for agent in self.agents}
 
         # typically there won't be any information in the infos, but there must
         # still be an entry for each agent
@@ -770,7 +774,7 @@ class para_MultiGridEnv(ParallelEnv):
 
         #self._accumulate_rewards() #not defined 
 
-        return observations, rewards, dones, infos
+        return observations, self.rewards, self.dones, infos
 
     def gen_obs_grid(self, agent):
         # If the agent is inactive, return an empty grid and a visibility mask that hides everything.
