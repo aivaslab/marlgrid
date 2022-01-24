@@ -647,7 +647,7 @@ class para_MultiGridEnv(ParallelEnv):
                             self.dones[agent_name] = True
                             
                             #print('reward', rwd)
-                            #agent.reward(rwd)
+                            agent.reward(rwd)
                         else:
                             self.rewards[agent_name] = self.step_reward
                             agent.step_reward = self.step_reward
@@ -754,10 +754,10 @@ class para_MultiGridEnv(ParallelEnv):
                 if not self.has_been_rewarded[agent_name]:
                     #if reached end without getting any reward
                     self.rewards[agent_name] = self.done_reward
-                    agent.reward = self.done_reward
+                    agent.reward(self.done_reward)
                 else:
                     self.rewards[agent_name] = 100000
-                    agent.reward = 100000
+                    agent.reward(100000)
             #self.rewards = {agent: self.done_reward for agent in self.agents}
         self._cumulative_rewards = {agent: self._cumulative_rewards[agent] + self.rewards[agent] for agent in self.agents}
 
