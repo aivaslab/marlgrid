@@ -547,21 +547,15 @@ class para_MultiGridEnv(ParallelEnv):
 
         # If a user passes in actions with no agents, then just return empty observations, etc.
         if not actions:
-            #self.agents = []
             return {}, {}, {}, {}
 
         
-
-        #print('acts', actions)
-        # Spawn agents if it's time.
-        if self.dones[self.agent_selection]:
+        '''if self.dones[self.agent_selection]:
             # handles stepping an agent which is already done
-            # accepts a None action for the one agent, and moves the agent_selection to
-            # the next done agent,  or if there are no more done agents, to the next live agent
             
             #changed this from returning self._was_done_step(action)
             #self.agent_selection = self._agent_selector.next()
-            return self.observations, self.rewards, self.dones, {}
+            return self.observations, self.rewards, self.dones, {}'''
 
         agent_name = self.agent_selection
         agent = self.instance_from_name[agent_name]
