@@ -570,7 +570,7 @@ class para_MultiGridEnv(ParallelEnv):
             self.place_obj(agent, **self.agent_spawn_kwargs)
             agent.activate()
 
-        self._cumulative_rewards[agent] = 0
+        #self._cumulative_rewards[agent] = 0
         #self.state[self.agent_selection] = action
 
         for agent_name in actions:
@@ -648,7 +648,7 @@ class para_MultiGridEnv(ParallelEnv):
                             #step_rewards[agent_no] += rwd
                             agent.step_reward = rwd
                             self.rewards[agent_name] = rwd
-                            self._cumulative_rewards[agent_name] += rwd
+                            #self._cumulative_rewards[agent_name] += rwd
                             self.has_been_rewarded[agent_name] = True
                             self.dones[agent_name] = True
                             
