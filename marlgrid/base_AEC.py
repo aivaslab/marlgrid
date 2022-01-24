@@ -774,7 +774,7 @@ class para_MultiGridEnv(ParallelEnv):
 
         #self._accumulate_rewards() #not defined 
 
-        return observations, self.rewards, self.dones, infos
+        return self.observations, self.rewards, self.dones, infos
 
     def gen_obs_grid(self, agent):
         # If the agent is inactive, return an empty grid and a visibility mask that hides everything.
