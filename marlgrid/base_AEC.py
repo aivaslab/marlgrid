@@ -653,7 +653,7 @@ class para_MultiGridEnv(ParallelEnv):
                             self.dones[agent_name] = True
                             
                             #print('reward', rwd)
-                            agent.reward(rwd)
+                            #agent.reward(rwd)
                         else:
                             self.rewards[agent_name] = self.step_reward
                             agent.step_reward = self.step_reward
