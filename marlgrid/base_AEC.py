@@ -510,7 +510,7 @@ class para_MultiGridEnv(ParallelEnv):
         self.infos = {agent: {} for agent in self.agents}
         self.state = {agent: NONE for agent in self.agents}
         self.observations = {agent: self.gen_agent_obs(a) for agent, a in zip(self.agents, self.agent_instances)}
-        self.num_moves = 0
+        self.step_count = 0
         self.env_done = False
         '''
         Our agent_selector utility allows easy cyclic stepping through the agents list.
@@ -729,32 +729,26 @@ class para_MultiGridEnv(ParallelEnv):
         #self.observations[agentname] = self.gen_agent_obs(agent)
 
         # made true since we update all agents
-        if True or self._agent_selector.is_last():
-            # rewards for all agents are placed in the .rewards dictionary
-            self.num_moves += 1
-            self.step_count += 1
-            # The dones dictionary must be updated for all players.
-            self.dones = {agent: self.num_moves >= NUM_ITERS for agent in self.agents}
+        #if True or self._agent_selector.is_last():
+        # rewards for all agents are placed in the .rewards dictionary
+        #self.num_moves += 1
+        self.step_count += 1
+        # The dones dictionary must be updated for all players.
+        self.dones = {agent: self.step_count >= NUM_ITERS for agent in self.agents}
 
-            # observe the current state
-            for agent_name, agent in zip(self.agents, self.agent_instances):
-                self.observations[agent_name] = self.gen_agent_obs(agent)
-                #self.rewards[agent_name] = agent.rew #reward
-        else:
-            # necessary so that observe() returns a reasonable observation at all times.
-            self.state[self.agents[0]] = NONE #todo expand this
-            # no rewards are allocated until both players give an action
-            
-            rewards = {}
-            #self._clear_rewards()
+        # observe the current state
+        for agent_name, agent in zip(self.agents, self.agent_instances):
+            self.observations[agent_name] = self.gen_agent_obs(agent)
+            #self.rewards[agent_name] = agent.rew #reward
+
 
         # selects the next agent.
-        self.agent_selection = self._agent_selector.next()
+        #self.agent_selection = self._agent_selector.next()
         # Adds .rewards to ._cumulative_rewards
 
         # The episode overall is done if all the agents are done, or if it exceeds the step limit.
         #done = (self.step_count >= self.max_steps) or all([agent.done for agent in self.agents])
-        if self.num_moves >= self.max_steps:
+        if self.step_count >= self.max_steps:
             self.env_done = True
 
         dones = {agent: self.env_done for agent in self.agents}
