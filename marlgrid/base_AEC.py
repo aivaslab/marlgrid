@@ -505,7 +505,7 @@ class para_MultiGridEnv(ParallelEnv):
         self.agents = self.possible_agents[:]
         self.rewards = {agent: 0 for agent in self.agents}
         self._cumulative_rewards = {agent: 0 for agent in self.agents}
-        self.has_terminated = {agent: False for agent in self.agents}
+        self.has_been_rewarded = {agent: False for agent in self.agents}
         self.dones = {agent: False for agent in self.agents}
         self.infos = {agent: {} for agent in self.agents}
         self.state = {agent: NONE for agent in self.agents}
@@ -649,7 +649,7 @@ class para_MultiGridEnv(ParallelEnv):
                             agent.step_reward = rwd
                             self.rewards[agent_name] = rwd
                             self._cumulative_rewards[agent_name] += rwd
-                            self.has_terminated[agent_name] = True
+                            self.has_been_rewarded[agent_name] = True
                             self.dones[agent_name] = True
                             
                             #print('reward', rwd)
@@ -663,6 +663,7 @@ class para_MultiGridEnv(ParallelEnv):
                             agent.done = True
                             #added below
                             self.dones[agent_name] = True
+
 
                 # TODO: verify pickup/drop/toggle logic in an environment that 
                 #  supports the relevant interactions.
@@ -755,10 +756,14 @@ class para_MultiGridEnv(ParallelEnv):
 
         #dones = {agent: self.env_done for agent in self.agents}
         if self.env_done == True:
-            for agent in self.agents:
-                if not self.has_terminated[agent]:
+            for agent_name, agent in zip(self.agents, self.agent_instances):
+                if not self.has_been_rewarded[agent_name]:
                     #if reached end without getting any reward
-                    self.rewards[agent] = self.done_reward
+                    self.rewards[agent_name] = self.done_reward
+                    agent.reward = self.done_reward
+                else:
+                    self.rewards[agent_name] = 100000
+                    agent.reward = 100000
             #self.rewards = {agent: self.done_reward for agent in self.agents}
         self._cumulative_rewards = {agent: self._cumulative_rewards[agent] + self.rewards[agent] for agent in self.agents}
 
