@@ -692,12 +692,12 @@ class para_MultiGridEnv(ParallelEnv):
         # observe the current state
         for agent_name, agent in zip(self.agents, self.agent_instances):
             self.observations[agent_name] = self.gen_agent_obs(agent)
-            self.rewards[agent_name] = agent.rew
+            #self.rewards[agent_name] = agent.rew
             if not self.dones[agent_name] and self.env_done:
                 self.dones[agent_name] = True
-            else if self.env_done:
+            elif self.env_done:
                 if not self.has_reached_goal[agent_name]:
-                    self.rewards[agent_name] = self.done_reward
+                    self.rewards[agent_name] += self.done_reward
                     agent.reward(self.done_reward)
 
         # Adds .rewards to ._cumulative_rewards
