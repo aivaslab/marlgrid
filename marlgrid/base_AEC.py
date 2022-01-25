@@ -562,6 +562,9 @@ class para_MultiGridEnv(ParallelEnv):
             self.rewards[agent_name] = 0
 
             if agent.active:
+                self.rewards[agent_name] = self.step_reward
+                agent.reward(self.step_reward)
+
                 cur_pos = agent.pos[:]
                 cur_cell = self.grid.get(*cur_pos)
                 #print('cell:' , cur_cell)
@@ -626,7 +629,7 @@ class para_MultiGridEnv(ParallelEnv):
                             
                             # removed, unclear what for
                             #step_rewards[agent_no] += rwd
-                            self.rewards[agent_name] = rwd
+                            self.rewards[agent_name] += rwd
                             self.has_reached_goal[agent_name] = True
                             self.dones[agent_name] = True
                             
@@ -634,10 +637,6 @@ class para_MultiGridEnv(ParallelEnv):
                             agent.done = True
                             agent.reward(rwd)
                             #agent.step_reward = rwd
-                        else:
-                            self.rewards[agent_name] = self.step_reward
-                            agent.reward(self.step_reward)
-                            #agent.step_reward = self.step_reward
                             
 
                         if isinstance(fwd_cell, (Lava, Goal)):
