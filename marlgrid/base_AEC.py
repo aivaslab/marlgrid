@@ -505,7 +505,7 @@ class para_MultiGridEnv(ParallelEnv):
         self.agents = self.possible_agents[:]
         self.rewards = {agent: 0 for agent in self.agents}
         self._cumulative_rewards = {agent: 0 for agent in self.agents}
-        self.has_been_rewarded = {agent: False for agent in self.agents}
+        self.has_reached_goal = {agent: False for agent in self.agents}
         self.dones = {agent: False for agent in self.agents}
         self.infos = {agent: {} for agent in self.agents}
         self.state = {agent: NONE for agent in self.agents}
@@ -549,33 +549,19 @@ class para_MultiGridEnv(ParallelEnv):
         if not actions:
             return {}, {}, {}, {}
 
-        
-        '''if self.dones[self.agent_selection]:
-            # handles stepping an agent which is already done
-            
-            #changed this from returning self._was_done_step(action)
-            #self.agent_selection = self._agent_selector.next()
-            return self.observations, self.rewards, self.dones, {}'''
-
-        agent_name = self.agent_selection
-        agent = self.instance_from_name[agent_name]
-
-        if not agent.active and not agent.done and self.step_count >= agent.spawn_delay:
-            self.place_obj(agent, **self.agent_spawn_kwargs)
-            agent.activate()
-
-        #self._cumulative_rewards[agent] = 0
-        #self.state[self.agent_selection] = action
+        for agent_name, agent in zip(self.agents, self.agent_instances):
+            if not agent.active and not agent.done and self.step_count >= agent.spawn_delay:
+                self.place_obj(agent, **self.agent_spawn_kwargs)
+                agent.activate()
+                self._cumulative_rewards[agent] = 0
 
         for agent_name in actions:
             action = actions[agent_name]
             agent = self.instance_from_name[agent_name]
-            #agent_no, (agent, action) = iter_agents[shuffled_ix]
             agent.step_reward = 0
             self.rewards[agent_name] = 0
 
             if agent.active:
-
                 cur_pos = agent.pos[:]
                 cur_cell = self.grid.get(*cur_pos)
                 #print('cell:' , cur_cell)
@@ -640,17 +626,18 @@ class para_MultiGridEnv(ParallelEnv):
                             
                             # removed, unclear what for
                             #step_rewards[agent_no] += rwd
-                            agent.step_reward = rwd
                             self.rewards[agent_name] = rwd
-                            #self._cumulative_rewards[agent_name] += rwd
-                            self.has_been_rewarded[agent_name] = True
+                            self.has_reached_goal[agent_name] = True
                             self.dones[agent_name] = True
                             
                             #print('reward', rwd)
+                            agent.done = True
                             agent.reward(rwd)
+                            #agent.step_reward = rwd
                         else:
                             self.rewards[agent_name] = self.step_reward
-                            agent.step_reward = self.step_reward
+                            agent.reward(self.step_reward)
+                            #agent.step_reward = self.step_reward
                             
 
                         if isinstance(fwd_cell, (Lava, Goal)):
@@ -696,79 +683,26 @@ class para_MultiGridEnv(ParallelEnv):
 
                 agent.on_step(fwd_cell if agent_moved else None)
 
-        
-        # If any of the agents individually are "done" (hit lava or in some cases a goal) 
-        #   but the env requires respawning, then respawn those agents.
-        '''
-        for agent in self.agent_instances:
-            if agent.done:
-                if self.respawn:
-                    resting_place_obj = self.grid.get(*agent.pos)
-                    if resting_place_obj == agent:
-                        if agent.agents:
-                            self.grid.set(*agent.pos, agent.agents[0])
-                            agent.agents[0].agents += agent.agents[1:]
-                        else:
-                            self.grid.set(*agent.pos, None)
-                    else:
-                        resting_place_obj.agents.remove(agent)
-                        resting_place_obj.agents += agent.agents[:]
-                        agent.agents = []
-                        
-                    agent.reset(new_episode=False)
-                    self.place_obj(agent, **self.agent_spawn_kwargs)
-                    agent.activate()
-                else: # if the agent shouldn't be respawned, then deactivate it.
-                    agent.deactivate()'''
-
-        
-
-        #self.observations[agentname] = self.gen_agent_obs(agent)
-
-        # made true since we update all agents
-        #if True or self._agent_selector.is_last():
         # rewards for all agents are placed in the .rewards dictionary
-        #self.num_moves += 1
+
         self.step_count += 1
-        # The dones dictionary must be updated for all players.
-        self.dones = {agent: self.step_count >= self.max_steps for agent in self.agents}
+        if self.step_count >= self.max_steps:
+            self.env_done = True
 
         # observe the current state
         for agent_name, agent in zip(self.agents, self.agent_instances):
             self.observations[agent_name] = self.gen_agent_obs(agent)
-            #self.rewards[agent_name] = agent.rew #reward
-
-
-        # selects the next agent.
-        #self.agent_selection = self._agent_selector.next()
-        # Adds .rewards to ._cumulative_rewards
-
-        # The episode overall is done if all the agents are done, or if it exceeds the step limit.
-        #done = (self.step_count >= self.max_steps) or all([agent.done for agent in self.agents])
-        if self.step_count >= self.max_steps:
-            self.env_done = True
-
-        #dones = {agent: self.env_done for agent in self.agents}
-        if self.env_done == True:
-            for agent_name, agent in zip(self.agents, self.agent_instances):
-                if not self.has_been_rewarded[agent_name]:
-                    #if reached end without getting any reward
+            self.rewards[agent_name] = agent.rew
+            if not self.dones[agent_name] and self.env_done:
+                self.dones[agent_name] = True
+            else if self.env_done:
+                if not self.has_reached_goal[agent_name]:
                     self.rewards[agent_name] = self.done_reward
                     agent.reward(self.done_reward)
-                else:
-                    self.rewards[agent_name] = 100000
-                    agent.reward(100000)
-            #self.rewards = {agent: self.done_reward for agent in self.agents}
+
+        # Adds .rewards to ._cumulative_rewards
         self._cumulative_rewards = {agent: self._cumulative_rewards[agent] + self.rewards[agent] for agent in self.agents}
 
-        # current observation is just the other player's most recent action
-        
-        #redundant?
-        #observations = {self.agents[i]: self.gen_agent_obs(self.instance_from_name[self.agents[i]]) for i in range(len(self.agents))} #currently 0
-        #rewards = self.rewards #{agent: 0 for agent in self.agents}
-
-        # typically there won't be any information in the infos, but there must
-        # still be an entry for each agent
         infos = {agent: {} for agent in self.agents}
 
         #self._accumulate_rewards() #not defined 
