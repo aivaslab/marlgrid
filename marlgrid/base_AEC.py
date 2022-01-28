@@ -255,10 +255,16 @@ class MultiGrid:
         if obj is None:
             return cls.cache_render_fun((tile_size, None), cls.empty_tile, tile_size, subdivs)
         else:
-            img = cls.cache_render_fun(
-                (tile_size, obj.__class__.__name__, *obj.encode()),
-                cls.render_object, obj, tile_size, subdivs
-            )
+            if not obj.carrying:
+                img = cls.cache_render_fun(
+                    (tile_size, obj.__class__.__name__, *obj.encode()),
+                    cls.render_object, obj, tile_size, subdivs
+                )
+            else:
+                img = cls.cache_render_fun(
+                    (tile_size, obj.__class__.__name__ + obj.carrying.__class__.__name__, *obj.encode()),
+                    cls.render_object, obj, tile_size, subdivs
+                )
             if hasattr(obj, 'render_post'):
                 return obj.render_post(img)
             else:
@@ -294,7 +300,7 @@ class MultiGrid:
             )/max_alpha
         ).astype(img1.dtype)
 
-    #@classmethod
+    @classmethod
     def render_tile(cls, obj, tile_size=TILE_PIXELS, subdivs=3, top_agent=None):
         subdivs = 3
 
