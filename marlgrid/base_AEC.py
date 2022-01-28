@@ -294,7 +294,7 @@ class MultiGrid:
             )/max_alpha
         ).astype(img1.dtype)
 
-    @classmethod
+    #@classmethod
     def render_tile(cls, obj, tile_size=TILE_PIXELS, subdivs=3, top_agent=None):
         subdivs = 3
 
