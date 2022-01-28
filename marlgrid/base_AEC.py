@@ -255,7 +255,7 @@ class MultiGrid:
         if obj is None:
             return cls.cache_render_fun((tile_size, None), cls.empty_tile, tile_size, subdivs)
         else:
-            if obj.type() == 'Agent' and obj.carrying is not None:
+            if obj.type == 'Agent' and obj.carrying is not None:
                 img = cls.cache_render_fun(
                     (tile_size, obj.__class__.__name__ + obj.carrying.__class__.__name__, *obj.encode()),
                     cls.render_object, obj, tile_size, subdivs
