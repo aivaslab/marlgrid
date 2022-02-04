@@ -444,7 +444,7 @@ class para_MultiGridEnv(ParallelEnv):
         #self.observation_space = self.observation_spaces[self.possible_agents[0]]
         #cannot define these because it makes uncallable
         
-        self.agent_instances = [agent for agent in agents] #was dict before?
+        self.agent_instances = {agent for agent in agents} #was dict before?
 
         self.instance_from_name = {name: agent for name, agent in zip(self.possible_agents, agents)}
 
