@@ -76,7 +76,7 @@ class para_TutorialEnv(para_MultiGridEnv):
 
             doorIdx = self._rand_int(1, height - 2)
             
-            if sublevel == 1:
+            if sublevel in [1,3]:
                 self.put_obj(Door(color=colors[0], state=0), splitIdx, doorIdx)
             if sublevel == 2:
                 self.put_obj(Door(color=colors[0], state=1), splitIdx, doorIdx)
