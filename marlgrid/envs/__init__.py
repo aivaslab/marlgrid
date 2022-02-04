@@ -71,7 +71,6 @@ def env_from_config(env_config, randomize_seed=True):
 register_marl_env(
     "MarlGrid-1AgentDoorKeyEnv6x6-v0",
     DoorKeyEnv,
-    grid_size=6,
     view_size=6,
     n_agents=1,
 )
@@ -132,8 +131,8 @@ register_marl_env(
     view_size=7,
     view_tile_size=5,
     view_offset=1,
-    env_kwargs={
+    '''env_kwargs={
         'clutter_density':0.1,
         'n_bonus_tiles': 3
-    }
+    }'''
 )
