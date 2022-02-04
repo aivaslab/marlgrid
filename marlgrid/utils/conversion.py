@@ -1,6 +1,6 @@
-from pettingzoo.utils.conversions import to_parallel
+from pettingzoo.utils.conversions import to_parallel, from_parallel
 import supersuit as ss
-from pettingzoo.utils import wrappers, from_parallel
+from pettingzoo.utils import wrappers
 
 def wrap_env(para_env, **kwargs):
     '''
