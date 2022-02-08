@@ -448,9 +448,9 @@ class para_MultiGridEnv(ParallelEnv):
 
         self.instance_from_name = {name: agent for name, agent in zip(self.possible_agents, agents)}
 
-    def action_space(agent):
+    def action_space(self, agent):
         return self.action_spaces[agent]
-    def observation_space(agent):
+    def observation_space(self, agent):
         return self.observation_spaces[agent]
 
     def seed(self, seed=1337):
