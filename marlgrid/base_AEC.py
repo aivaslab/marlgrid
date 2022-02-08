@@ -14,7 +14,7 @@ from .objects import WorldObj, Wall, Goal, Lava, GridAgent, BonusTile, BulkObj, 
 from .agents import GridAgentInterface
 #from .rendering import SimpleImageViewer
 from gym_minigrid.rendering import fill_coords, point_in_rect, downsample, highlight_img
-from gym.spaces import Discrete, Box
+from gym.spaces import Discrete, Box, Dict
 from pettingzoo import AECEnv, ParallelEnv
 from pettingzoo.utils import agent_selector
 from pettingzoo.utils import wrappers
