@@ -428,6 +428,7 @@ class para_MultiGridEnv(ParallelEnv):
 
         # Gym spaces are defined and documented here: https://gym.openai.com/docs/#spaces
         self.action_spaces = {agent: Discrete(7) for agent in self.possible_agents}
+        self.action_space = Dict(self.action_spaces)
         
         self.env_done = False
         self.step_count = 0
@@ -439,6 +440,7 @@ class para_MultiGridEnv(ParallelEnv):
             shape=(self.agent_view_size, self.agent_view_size, 3),
             dtype='uint8'
         ) for agent in self.possible_agents}
+        self.observation_space = Dict(self.observation_spaces)
 
         #self.action_space = self.action_spaces[self.possible_agents[0]]
         #self.observation_space = self.observation_spaces[self.possible_agents[0]]
