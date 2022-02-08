@@ -14,7 +14,7 @@ from .objects import WorldObj, Wall, Goal, Lava, GridAgent, BonusTile, BulkObj, 
 from .agents import GridAgentInterface
 #from .rendering import SimpleImageViewer
 from gym_minigrid.rendering import fill_coords, point_in_rect, downsample, highlight_img
-from gym.spaces import Discrete, Box, Dict
+from gym.spaces import Discrete, Box
 from pettingzoo import AECEnv, ParallelEnv
 from pettingzoo.utils import agent_selector
 from pettingzoo.utils import wrappers
@@ -428,7 +428,6 @@ class para_MultiGridEnv(ParallelEnv):
 
         # Gym spaces are defined and documented here: https://gym.openai.com/docs/#spaces
         self.action_spaces = {agent: Discrete(7) for agent in self.possible_agents}
-        self.action_space = Dict(self.action_spaces)
         
         self.env_done = False
         self.step_count = 0
@@ -440,7 +439,6 @@ class para_MultiGridEnv(ParallelEnv):
             shape=(self.agent_view_size, self.agent_view_size, 3),
             dtype='uint8'
         ) for agent in self.possible_agents}
-        self.observation_space = Dict(self.observation_spaces)
 
         #self.action_space = self.action_spaces[self.possible_agents[0]]
         #self.observation_space = self.observation_spaces[self.possible_agents[0]]
@@ -450,7 +448,10 @@ class para_MultiGridEnv(ParallelEnv):
 
         self.instance_from_name = {name: agent for name, agent in zip(self.possible_agents, agents)}
 
-
+    def action_space(agent):
+        return self.action_spaces[agent]
+    def observation_space(agent):
+        return self.observation_spaces[agent]
 
     def seed(self, seed=1337):
         # Seed the random number generator
