@@ -1,4 +1,4 @@
-from pettingzoo.utils.conversions import aec_to_parallel, from_parallel
+from pettingzoo.utils.conversions import aec_to_parallel, parallel_to_aec
 import supersuit as ss
 from pettingzoo.utils import wrappers
 
@@ -22,7 +22,7 @@ def raw_env(para_env, **kwargs):
     function to convert from a ParallelEnv to an AEC env
     '''
     env = para_env(**kwargs)
-    env = from_parallel(env)
+    env = parallel_to_aec(env)
     return env
 
 def pz2sb3(env, num_cpus=2):
