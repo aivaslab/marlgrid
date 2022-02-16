@@ -22,9 +22,6 @@ class para_TutorialEnv(para_MultiGridEnv):
     def _rand_int(self, x, y):
         return randrange(x, y)
 
-    def save_grid(grid, kwargs, path):
-
-
     def _gen_grid(self, width, height):
         self.grid = MultiGrid((width, height))
         if self.random_mode:
