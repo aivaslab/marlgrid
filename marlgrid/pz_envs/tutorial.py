@@ -14,14 +14,19 @@ class para_TutorialEnv(para_MultiGridEnv):
     metadata = {'render.modes': ['human', 'rgb_array'], "name": "tutorial"}
     random_mode = False
     mylevel = 2
-    mysublevel = 6
+    mysublevel = 1
+    loading_mode = False
+    saving_mode = False
+    path = ''
 
     def _rand_int(self, x, y):
         return randrange(x, y)
 
+    def save_grid(grid, kwargs, path):
+
+
     def _gen_grid(self, width, height):
-        # Create an empty grid
-        #print('runnning')
+        self.grid = MultiGrid((width, height))
         if self.random_mode:
             level = randrange(1,4)
             if level == 1:
@@ -37,9 +42,7 @@ class para_TutorialEnv(para_MultiGridEnv):
         colors = random.sample(['purple','orange','yellow','blue','pink','red'], 4)
 
         #grid and surrounding walls
-        self.grid = MultiGrid((width, height))
         self.grid.wall_rect(0, 0, width, height)
-
 
         if level == 1: #empty, cluttered, and mazes
             #self.put_obj(Goal(color="green", reward=100), width - 2, height//2)

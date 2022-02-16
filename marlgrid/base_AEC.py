@@ -448,6 +448,9 @@ class para_MultiGridEnv(ParallelEnv):
 
         self.instance_from_name = {name: agent for name, agent in zip(self.possible_agents, agents)}
 
+        self.loadingPickle = False
+        self.allRooms = []
+
     def action_space(self, agent):
         return self.action_spaces[agent]
     def observation_space(self, agent):
@@ -532,7 +535,10 @@ class para_MultiGridEnv(ParallelEnv):
             agent.name = name
             agent.reset(new_episode=True)
 
-        self._gen_grid(self.width, self.height)
+        if self.loadingPickle:
+            self.grid = random.choice(self.allRooms)
+        else:
+            self._gen_grid(self.width, self.height)
 
         for agent in self.agent_instances:
             if agent.spawn_delay == 0:
