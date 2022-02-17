@@ -29,7 +29,7 @@ class para_DoorKeyEnv(para_MultiGridEnv):
         self.put_obj(Goal(color="green", reward=100), width - 2, height - 2)
 
         # Create a vertical splitting wall
-        splitIdx = self._rand_int(3, width - 2)
+        splitIdx = self._rand_int(2, width - 2)
         self.grid.vert_wall(splitIdx, 1)
 
         # Place the agent at a random position and orientation
@@ -43,5 +43,5 @@ class para_DoorKeyEnv(para_MultiGridEnv):
         # Place a yellow key on the left side
         self.place_obj(obj=Key("yellow"), top=(0, 0), size=(splitIdx, height))
 
-        self.agent_spawn_kwargs = {}
+        self.agent_spawn_kwargs = {'size': (splitIdx, 5)}
         self.place_agents(**self.agent_spawn_kwargs)
