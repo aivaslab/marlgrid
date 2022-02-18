@@ -21,6 +21,11 @@ class para_TutorialEnv(para_MultiGridEnv):
     saving_mode = False
     path = ''
 
+    def _set_seed(self, seed):
+        if seed != -1:
+            self.seed_mode = True
+            self.curSeed = seed
+
     def _rand_int(self, x, y):
         return randrange(x, y)
 
