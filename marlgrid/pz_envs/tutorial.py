@@ -13,6 +13,8 @@ class para_TutorialEnv(para_MultiGridEnv):
     mission = "get to the goal"
     metadata = {'render.modes': ['human', 'rgb_array'], "name": "tutorial"}
     random_mode = True
+    seed_mode = False
+    curSeed = 1337
     stages = ["1a", "1b", "1c", "1d", "2a", "2b", "2c", "2d", "2e", "2f", "3a", "3b"]
     curStage = 0;
     loading_mode = False
@@ -24,6 +26,10 @@ class para_TutorialEnv(para_MultiGridEnv):
 
     def _gen_grid(self, width, height):
         self.grid = MultiGrid((width, height))
+        if seed_mode:
+            random.seed(curSeed)
+            curSeed += 1
+
         if self.random_mode:
             stage = random.choice(self.stages)
         else:
