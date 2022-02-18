@@ -26,7 +26,7 @@ class para_TutorialEnv(para_MultiGridEnv):
 
     def _gen_grid(self, width, height):
         self.grid = MultiGrid((width, height))
-        if seed_mode:
+        if self.seed_mode:
             random.seed(curSeed)
             curSeed += 1
 
