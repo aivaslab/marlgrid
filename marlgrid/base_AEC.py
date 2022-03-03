@@ -447,6 +447,8 @@ class para_MultiGridEnv(ParallelEnv):
         #cannot define these because it makes uncallable
         
         self.agent_instances = {agent for agent in agents} #was dict before?
+        
+        print(self.possible_agents, agents)
 
         self.instance_from_name = {name: agent for name, agent in zip(self.possible_agents, agents)}
 
@@ -526,15 +528,11 @@ class para_MultiGridEnv(ParallelEnv):
         self.observations = {agent: self.gen_agent_obs(a) for agent, a in zip(self.agents, self.agent_instances)}
         self.step_count = 0
         self.env_done = False
-        '''
-        Our agent_selector utility allows easy cyclic stepping through the agents list.
-        '''
-        self._agent_selector = agent_selector(self.agents)
-        self.agent_selection = self._agent_selector.next()
 
-        for name, agent in zip(self.agents, self.agent_instances):
+        for name, agent in zip(self.agents, list(self.agent_instances)):
             agent.agents = []
             agent.name = name
+            self.instance_from_name[name] = agent
             agent.reset(new_episode=True)
 
         if self.loadingPickle:
@@ -545,8 +543,10 @@ class para_MultiGridEnv(ParallelEnv):
         for agent in self.agent_instances:
             if agent.spawn_delay == 0:
                 try:
-                    print(self.agent_spawn_pos)
-                    self.put_obj(agent, self.agent_spawn_pos[agent.name][0], self.agent_spawn_pos[agent.name][1])
+                    #print(*self.agent_spawn_pos[agent.name])
+                    self.put_obj(agent, self.agent_spawn_pos[agent.name][0], self.agent_spawn_pos[agent.name][1]) #x,y,dir
+                    agent.dir = self.agent_spawn_pos[agent.name][2]
+                    #print('success')
                 except:
                     self.place_obj(agent, **self.agent_spawn_kwargs)
                 agent.activate()
@@ -635,8 +635,12 @@ class para_MultiGridEnv(ParallelEnv):
 
                             # send signal to override next action
                             if "Arrow" in str(fwd_cell.__class__):
-                                relative_dir = (fwd_cell.direction - agent.dir) % 4
-                                infos[agent_name] = ("act", relative_dir)
+                                relative_dir = (agent.dir - fwd_cell.direction) % 4
+                                print(relative_dir)
+                                if relative_dir == 3:
+                                	infos[agent_name] = ("act", 0)
+                                if relative_dir == 1:
+                                	infos[agent_name] = ("act", 1)
 
 
                         # Remove agent from old cell
@@ -666,6 +670,7 @@ class para_MultiGridEnv(ParallelEnv):
                         # Rewards can be got iff. fwd_cell has a "get_reward" method
                         if hasattr(fwd_cell, 'get_reward'):
                             rwd = fwd_cell.get_reward(agent)
+                            self.grid.set(*fwd_cell.pos, None)
                             if bool(self.reward_decay):
                                 rwd *= (1.0-0.9*(self.step_count/self.max_steps))
                             
