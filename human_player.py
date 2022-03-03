@@ -61,9 +61,9 @@ human = HumanPlayer()
 human.start_episode()
 done = False
 env.variants = ['5e']
-nextAct = 2
 for i in range(5):
     obs = env.reset()
+    nextAct = 2
     while True:
 
         #env.unwrapped.render() # OPTIONAL: render the whole scene + birds eye view
