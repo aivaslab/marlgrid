@@ -15,11 +15,43 @@ class para_TutorialEnv(para_MultiGridEnv):
     random_mode = True
     seed_mode = False
     curSeed = 1337
-    stages = ["1a", "1b", "1c", "1d", "2a", "2b", "2c", "2d", "2e", "2f", "3a", "3b"]
-    curStage = 0;
+    variants = ["1a", "1b", "1c", "1d", "2a", "2b", "2c", "2d", "2e", "2f", "3a", "3b"]
+    curvariant = 0;
     loading_mode = False
     saving_mode = False
     path = ''
+    #todo: add a 'food is hidden in x box' tutorial
+    # how to demonstrate? animation? lever that flips all Red/Blue boxes like in mario?
+    #plus automated puppet to trigger the lever on a timer ! well that's just all timelines. 
+    #make a timeline puppet that just changes state
+
+    def _init_level1(self, variant, width, height):
+        if variant[1] in "bcd":
+            for x in range(2, width-1, 2):
+                for y in range(2, height-1, 2):
+                    if variant[1] in "cd":
+                        self.put_obj(Wall(), x, y)
+                    else:
+                        num = randrange(0,10)
+                        if num == 0:
+                            self.put_obj(Wall(), x, y)
+                        elif num == 1:
+                            self.put_obj(Door(color=colors[0], state=randrange(1,4)), x, y)
+                        elif num == 2:
+                            self.put_obj(Key(color=colors[0], state=randrange(1,4)), x, y)
+        if variant[1] == "d":
+            for i in range(3):
+                num = randrange(0,3)
+                if num == 0:
+                    self.place_obj(Wall(), top=(0, 0), size=(width, height))
+                elif num == 1:
+                    self.place_obj(Door(color=colors[0], state=randrange(1,4)), top=(0, 0), size=(width, height))
+                elif num == 2:
+                    self.place_obj(Key(color=colors[0], state=randrange(1,4)), top=(0, 0), size=(width, height))
+
+        self.place_obj(Goal(color="green", reward=100), top=(0, 0), size=(width, height))
+        if variant[1] == "e":
+            self.place_obj(Goal(color="green", reward=50, size=0.5), top=(0, 0), size=(width, height))
 
     def _set_seed(self, seed):
         if seed != -1:
@@ -36,62 +68,37 @@ class para_TutorialEnv(para_MultiGridEnv):
             self.curSeed += 1
 
         if self.random_mode:
-            stage = random.choice(self.stages)
+            variant = random.choice(self.variants)
         else:
-            stage = self.stages[self.curStage]
-            self.curStage = (self.curStage + 1) % len(self.stages) 
+            variant = self.variants[self.curvariant]
+            self.curvariant = (self.curvariant + 1) % len(self.variants) 
 
         colors = random.sample(['purple','orange','yellow','blue','pink','red'], 4)
 
         #grid and surrounding walls
         self.grid.wall_rect(0, 0, width, height)
 
-        if "1" in stage: #empty, cluttered, and mazes
+        if "1" in variant: #empty, cluttered, and mazes
             #self.put_obj(Goal(color="green", reward=100), width - 2, height//2)
+            self._init_level1(variant, width=width, height=height)
 
-            if stage[1] in "bcd":
-                for x in range(2, width-1, 2):
-                    for y in range(2, height-1, 2):
-                        if stage[1] in "cd":
-                            self.put_obj(Wall(), x, y)
-                        else:
-                            num = randrange(0,10)
-                            if num == 0:
-                                self.put_obj(Wall(), x, y)
-                            elif num == 1:
-                                self.put_obj(Door(color=colors[0], state=randrange(1,4)), x, y)
-                            elif num == 2:
-                                self.put_obj(Key(color=colors[0], state=randrange(1,4)), x, y)
-            if stage[1] == "d":
-                for i in range(3):
-                    num = randrange(0,3)
-                    if num == 0:
-                        self.place_obj(Wall(), top=(0, 0), size=(width, height))
-                    elif num == 1:
-                        self.place_obj(Door(color=colors[0], state=randrange(1,4)), top=(0, 0), size=(width, height))
-                    elif num == 2:
-                        self.place_obj(Key(color=colors[0], state=randrange(1,4)), top=(0, 0), size=(width, height))
-
-            self.place_obj(Goal(color="green", reward=100), top=(0, 0), size=(width, height))
-
-
-        elif "2" in stage: #doorkey variants
+        elif "2" in variant: #doorkey variants
             splitIdx = self._rand_int(2, width - 2)
             self.grid.vert_wall(splitIdx, 1)
 
             doorIdx = self._rand_int(1, height - 2)
             
-            if stage[1] in "ac":
+            if variant[1] in "ac":
                 self.put_obj(Door(color=colors[0], state=1), splitIdx, doorIdx)
-            if stage[1] == "b":
+            if variant[1] == "b":
                 self.put_obj(Door(color=colors[0], state=2), splitIdx, doorIdx)
-            if stage[1] in "def":
+            if variant[1] in "def":
                 self.put_obj(Door(color=colors[0], state=3), splitIdx, doorIdx)
-            if stage[1] in "cd":
+            if variant[1] in "cd":
                 self.put_obj(Key(color=colors[0]), splitIdx-1, doorIdx)
-            if stage[1] in "ef":
+            if variant[1] in "ef":
                 self.place_obj(Key(color=colors[0]), top=(1, 1), size=(splitIdx, height-1))
-            if stage[1] == "f":
+            if variant[1] == "f":
                 self.place_obj(Key(color=colors[1]), top=(1, 1), size=(splitIdx, height-1))
 
             self.put_obj(Goal(color="green", reward=100), width - 2, height//2)
@@ -99,7 +106,7 @@ class para_TutorialEnv(para_MultiGridEnv):
             self.agent_spawn_kwargs = {'size': (splitIdx, height)}
 
 
-        elif "3" in stage: #4-way doorkey variants
+        elif "3" in variant: #4-way doorkey variants
             goals = random.sample([0,0,0,1], 4)
 
             goal_positions = [(width-2,height//2), (width//2,1), (1,height//2), (width//2, height-2)]
@@ -118,9 +125,9 @@ class para_TutorialEnv(para_MultiGridEnv):
             # Place doors, goals, subgoals
             for color, goal, goal_p, door, sub in zip(colors, goals, goal_positions, door_positions, subgoal_positions):
                 
-                if stage[1] == "a":
+                if variant[1] == "a":
                     self.put_obj(Door(color=color, state=2), door[0], door[1])
-                elif stage[1] == "b":
+                elif variant[1] == "b":
                     self.put_obj(Door(color=color, state=3), door[0], door[1])
                     self.place_obj(obj=Key(color=color), top=(3, 3), size=(width-6, height-6))
 
@@ -128,5 +135,39 @@ class para_TutorialEnv(para_MultiGridEnv):
 
             self.agent_spawn_kwargs = {'top': (2,2), 'size': (width-4, height-4)}
 
+        elif "4" in variant: #memory
 
-        self.place_agents(**self.agent_spawn_kwargs)
+            self.grid.wall_rect(0, 1, width-1, height-2)
+
+            goals = random.sample([0, 1], 2)
+
+
+            self.put_obj(Lava(), 4, 4)
+            self.put_obj(Lava(), 5, 4)
+
+            for x in range(2,6):
+                self.put_obj(Lava(), x, 5)
+                self.put_obj(Lava(), x, 3)
+
+            if variant[1] in 'a': #no visible goal
+                egg = True
+            if variant[1] in 'bcd':
+                self.put_obj(Goal(reward=100, color='green'), 6, 4)
+            if variant[1] in 'efgh': #offset goal
+                self.put_obj(Goal(reward=100, color='green'), 6, 3+2*goals[0])
+            if variant[1] in 'cd': #one path blocked by lava
+                self.put_obj(Lava(), 6, 3+2*goals[0])
+                self.put_obj(Lava(), 6, 2+4*goals[0])
+            if variant[1] in 'd': # alt path blocked by lava
+                self.put_obj(Lava(), 6, 3+2*goals[1])
+                self.put_obj(Lava(), 6, 2+4*goals[1])
+            if variant[1] in 'g': # alt offset goal (smaller)
+                self.put_obj(Goal(reward=50, color='green', size=0.5), 6, 3+2*goals[1])
+            if variant[1] in 'fh': #lava btw offsets
+                self.put_obj(Lava(), 6, 5)
+
+            self.agent_spawn_kwargs = {'top': (3,4), 'size': (1, 1)}
+
+        #self.place_agents(**self.agent_spawn_kwargs)
+
+

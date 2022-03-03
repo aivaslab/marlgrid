@@ -262,7 +262,7 @@ class MultiGrid:
                 )
             else:
                 img = cls.cache_render_fun(
-                    (tile_size, obj.__class__.__name__, *obj.encode()),
+                    (tile_size, obj.__class__.__name__ + str(obj.size), *obj.encode()),
                     cls.render_object, obj, tile_size, subdivs
                 )
             if hasattr(obj, 'render_post'):
@@ -409,6 +409,8 @@ class para_MultiGridEnv(ParallelEnv):
 
         self.window = None
 
+        self.timers = {}
+
         self.width = width
         self.height = height
         self.max_steps = max_steps
@@ -542,10 +544,17 @@ class para_MultiGridEnv(ParallelEnv):
 
         for agent in self.agent_instances:
             if agent.spawn_delay == 0:
-                self.place_obj(agent, **self.agent_spawn_kwargs)
+                try:
+                    print(self.agent_spawn_pos)
+                    self.put_obj(agent, self.agent_spawn_pos[agent.name][0], self.agent_spawn_pos[agent.name][1])
+                except:
+                    self.place_obj(agent, **self.agent_spawn_kwargs)
                 agent.activate()
 
         return self.observations
+
+    def timer_active(self, name):
+        pass
 
     def step(self, actions):
 
@@ -560,6 +569,12 @@ class para_MultiGridEnv(ParallelEnv):
         And any internal state used by observe() or render()
         '''
 
+        # activate timed events
+        for name in self.timers:
+            if self.timers[name] == self.step_count+1:
+                #print(name, "event")
+                self.timer_active(name)
+
         # If a user passes in actions with no agents, then just return empty observations, etc.
         if not actions:
             return {}, {}, {}, {}
@@ -569,6 +584,8 @@ class para_MultiGridEnv(ParallelEnv):
                 self.place_obj(agent, **self.agent_spawn_kwargs)
                 agent.activate()
                 self._cumulative_rewards[agent] = 0
+
+        infos = {agent: {} for agent in self.agents}
 
         for agent_name in actions:
             action = actions[agent_name]
@@ -611,6 +628,16 @@ class para_MultiGridEnv(ParallelEnv):
                         else:
                             fwd_cell.agents.append(agent)
                             agent.pos = fwd_pos
+
+                            # send signal to test next action outputs
+                            if "Test" in str(fwd_cell.__class__):
+                                infos[agent_name] = ("test", fwd_cell.direction)
+
+                            # send signal to override next action
+                            if "Arrow" in str(fwd_cell.__class__):
+                                relative_dir = (fwd_cell.direction - agent.dir) % 4
+                                infos[agent_name] = ("act", relative_dir)
+
 
                         # Remove agent from old cell
                         if cur_cell == agent:
@@ -659,9 +686,6 @@ class para_MultiGridEnv(ParallelEnv):
                             #added below
                             self.dones[agent_name] = True
 
-
-                # TODO: verify pickup/drop/toggle logic in an environment that 
-                #  supports the relevant interactions.
                 # Pick up an object
                 elif action == agent.actions.pickup:
                     if fwd_cell and fwd_cell.can_pickup():
@@ -716,8 +740,6 @@ class para_MultiGridEnv(ParallelEnv):
 
         # Adds .rewards to ._cumulative_rewards
         self._cumulative_rewards = {agent: self._cumulative_rewards[agent] + self.rewards[agent] for agent in self.agents}
-
-        infos = {agent: {} for agent in self.agents}
 
         #self._accumulate_rewards() #not defined 
 
@@ -794,6 +816,11 @@ class para_MultiGridEnv(ParallelEnv):
         if obj is not None:
             obj.set_position((i,j))
         return True
+
+    def del_obj(self, i, j):
+        o = self.grid.get(i,j)
+        self.grid.grid[i,j] = 0
+        del o
 
     def try_place_obj(self,obj, pos):
         ''' Try to place an object at a certain position in the grid.

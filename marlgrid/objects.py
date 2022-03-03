@@ -4,6 +4,7 @@ from gym_minigrid.rendering import (
 	fill_coords,
 	point_in_rect,
 	point_in_triangle,
+	point_in_line,
 	rotate_fn,
 	point_in_circle,
 )
@@ -37,6 +38,19 @@ COLOR_TO_IDX = dict({v: k for k, v in enumerate(COLORS.keys())})
 
 OBJECT_TYPES = []
 
+def point_in_semicircle(cx, cy, r, xmin=0, xmax=1, ymin=0, ymax=1):
+	def fn(x, y):
+		return ((x-cx)*(x-cx) + (y-cy)*(y-cy) <= r * r) and point_in_rect(xmin, xmax, ymin, ymax)
+	return fn
+
+def point_in_agent():
+
+	tri_fn = point_in_triangle((0.12, 0.19), (0.87, 0.50), (0.12, 0.81),)
+	c_fn = point_in_circle(0.5, 0.5, 0.15)
+	def fn(x, y):
+		return tri_fn(x,y) and not c_fn(x,y)
+	return fn
+
 class RegisteredObjectType(type):
 	def __new__(meta, name, bases, class_dict):
 		cls = type.__new__(meta, name, bases, class_dict)
@@ -61,6 +75,7 @@ class WorldObj(metaclass=RegisteredObjectType):
 		self.pos_init = None
 		self.pos = None
 		self.is_agent = False
+		self.size = 1.0
 
 	@property
 	def dir(self):
@@ -129,12 +144,13 @@ class WorldObj(metaclass=RegisteredObjectType):
 
 
 class GridAgent(WorldObj):
-	def __init__(self, *args, color='red', **kwargs):
+	def __init__(self, *args, color='red', adversary='false', **kwargs):
 		super().__init__(*args, **{'color':color, **kwargs})
 		self.metadata = {
 			'color': color,
 		}
 		self.is_agent = True
+		self.adversary = adversary
 
 	@property
 	def dir(self):
@@ -155,14 +171,16 @@ class GridAgent(WorldObj):
 		return True
 
 	def render(self, img):
-		tri_fn = point_in_triangle((0.12, 0.19), (0.87, 0.50), (0.12, 0.81),)
+		if self.adversary:
+			tri_fn = point_in_agent()
+		else:
+			tri_fn = point_in_triangle((0.12, 0.19), (0.87, 0.50), (0.12, 0.81),)
+		
 		tri_fn = rotate_fn(tri_fn, cx=0.5, cy=0.5, theta=0.5 * np.pi * (self.dir))
 		fill_coords(img, tri_fn, COLORS[self.color])
 
 		if self.carrying is not None:
 			self.carrying.render(img)
-
-
 
 class BulkObj(WorldObj, metaclass=RegisteredObjectType):
 	# Todo: special behavior for hash, eq if the object has an agent.
@@ -171,6 +189,23 @@ class BulkObj(WorldObj, metaclass=RegisteredObjectType):
 
 	def __eq__(self, other):
 		return hash(self) == hash(other)
+
+class InvisibleObject(WorldObj):
+	def can_overlap(self):
+		return True
+
+	def render(self, img):
+		pass
+
+class Arrow(InvisibleObject):
+	def __init__(self, direction, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.direction = direction
+
+class Tester(InvisibleObject):
+	def __init__(self, correct_direction, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.direction = correct_direction
 
 class BonusTile(WorldObj):
 	def __init__(self, reward, penalty=-0.1, bonus_id=0, n_bonus=1, initial_reward=True, reset_on_mistake=False, color='yellow', *args, **kwargs):
@@ -220,9 +255,10 @@ class BonusTile(WorldObj):
 		fill_coords(img, point_in_rect(0, 1, 0, 1), COLORS[self.color])
 
 class Goal(WorldObj):
-	def __init__(self, reward, *args, **kwargs):
+	def __init__(self, reward, size=1.0, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self.reward = reward
+		self.size = size
 
 	def can_overlap(self):
 		return True
@@ -234,7 +270,7 @@ class Goal(WorldObj):
 		return "GG"
 
 	def render(self, img):
-		fill_coords(img, point_in_rect(0, 1, 0, 1), COLORS[self.color])
+		fill_coords(img, point_in_circle(0.5, 0.5, self.size*0.31), COLORS[self.color])
 	  
 	  
 class SubGoal(WorldObj):
@@ -302,6 +338,9 @@ class EmptySpace(WorldObj):
 	def str_render(self, dir=0):
 		return "  "
 
+	def render(self, img):
+		pass
+
 
 class Lava(WorldObj):
 	def can_overlap(self):
@@ -335,6 +374,48 @@ class Wall(BulkObj):
 
 	def render(self, img):
 		fill_coords(img, point_in_rect(0, 1, 0, 1), COLORS[self.color])
+
+class Block(WorldObj):
+    def __init__(self, init_state, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.state = init_state
+
+    def see_behind(self):
+        return False
+
+    def str_render(self, dir=0):
+        return "BB"
+
+    def render(self, img):
+        c = COLORS[self.color]
+        if self.state == 1:
+            fill_coords(img, point_in_rect(0.1, 0.9, 0.1, 0.9), c)
+            fill_coords(img, point_in_line(0.15, 0.15, 0.85, 0.85, r=0.04), (0, 0, 0))
+            fill_coords(img, point_in_line(0.85, 0.15, 0.15, 0.85, r=0.04), (0, 0, 0))
+        else:
+            fill_coords(img, point_in_line(0.15, 0.15, 0.85, 0.85, r=0.04), c)
+            fill_coords(img, point_in_line(0.85, 0.15, 0.15, 0.85, r=0.04), c)
+
+class GlassBlock(WorldObj):
+    def __init__(self, init_state, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.state = init_state
+
+    def see_behind(self):
+        return True
+
+    def str_render(self, dir=0):
+        return "LL"
+
+    def render(self, img):
+        c = COLORS[self.color]
+        if self.state == 1:
+            fill_coords(img, point_in_rect(0.1, 0.9, 0.1, 0.9), c)
+            fill_coords(img, point_in_line(0.15, 0.15, 0.85, 0.85, r=0.1), (0, 0, 0))
+            fill_coords(img, point_in_line(0.85, 0.15, 0.15, 0.85, r=0.1), (0, 0, 0))
+        else:
+            fill_coords(img, point_in_line(0.15, 0.15, 0.85, 0.85, r=0.1), c)
+            fill_coords(img, point_in_line(0.85, 0.15, 0.15, 0.85, r=0.1), c)
 
 
 class Key(WorldObj):
@@ -427,8 +508,17 @@ class Box(WorldObj):
 	def can_pickup(self):
 		return True
 
-	def toggle(self):
-		raise NotImplementedError
+	def toggle(self, agent, fwd_pos):
+		#turn into what you're carrying
+		#unused
+		pass
+		print('toggling')
+		#self.__class__ = self.contains.__class__
+		#self.render = self.contains.render
+		#self.reward = self.contains.reward
+		#self.get_reward = self.contains.get_reward
+		#self.can_overlap = self.contains.can_overlap
+		#del self
 
 	def str_render(self, dir=0):
 		return "BB"

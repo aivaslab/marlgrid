@@ -34,7 +34,7 @@ class HumanPlayer:
 
 
 env_config =  {
-    "env_class": "para_TutorialEnv",
+    "env_class": "para_CompFeedEnv",
     "max_steps": 250,
     "respawn": True,
     "ghost_mode": True,
@@ -44,24 +44,24 @@ env_config =  {
 }
 
 player_interface_config = {
-    "view_size": 7,
-    "view_offset": 1,
+    "view_size": 11,
+    "view_offset": 0,
     "view_tile_size": 32,
     "observation_style": "rich",
     "see_through_walls": False,
     "color": "prestige"
 }
 
-env_config['agents'] = [GridAgentInterface(**player_interface_config)]
+env_config['agents'] = [GridAgentInterface(**player_interface_config), GridAgentInterface(**player_interface_config)]
 
 env = env_from_config(env_config)
-
-
 
 human = HumanPlayer()
 
 human.start_episode()
 done = False
+env.variants = ['5e']
+nextAct = 2
 for i in range(5):
     obs = env.reset()
     while True:
@@ -70,10 +70,15 @@ for i in range(5):
 
         player_action = human.action_step(obs['player_0']['pov'])
 
-        agent_actions = {'player_0': player_action}
+        puppet_action = nextAct
+        agent_actions = {'player_0': player_action, 'player_1': puppet_action}
 
-        next_obs, rew, done, _ = env.step(agent_actions)
+        next_obs, rew, done, info = env.step(agent_actions)
         reward = rew['player_0']
+
+        nextAct = 2
+        if info['player_1'] != {} and info['player_1'][0] == 'act':
+            nextAct = info['player_1'][1]
         
         
         human.save_step(

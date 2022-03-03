@@ -4,85 +4,95 @@ from random import randrange
 import random
 import math
 
-class CompFeedEnv(para_MultiGridEnv):
-    """
-    Environment with a door and key, sparse reward.
-    Similar to DoorKeyEnv in 
-        https://github.com/maximecb/gym-minigrid/blob/master/gym_minigrid/envs/doorkey.py
-    """
+class para_CompFeedEnv(para_MultiGridEnv):
 
-    mission = "use the key to open the door and then get to the goal"
-    metadata = {}
-
-    def init_agents(self, arg, agent_kwargs):
-        if arg == 0:
-            self.apos = [(2,7,0),(12,7,2)]
-        for agent in self.apos:
-            self.add_agent(GridAgentInterface(**agent_kwargs))
+    mission = "get to the goal"
+    metadata = {'render.modes': ['human', 'rgb_array'], "name": "compfeedenv"}
+    variants = []
 
     def _gen_grid(self, width, height):
-        # Create an empty grid
+        width = 15
+        height = 9
+        curType = "informed" #both glass, food baited, both released
+        #curType = "uninformed" #both glass, dom blinded, food baited, both released
+        #curType = "control misinformed" #both glass, food baited, food swapped, both released
+        #curType = "misinformed" #both glass, food baited, dom blinded, food swapped, both released
+
+        self.timers = {}
+
+        self.timers["bait"] = 3
+        self.timers["hide"] = 4
+        self.timers["release"] = 5
+        if curType == "uninformed":
+            self.timers["dBlind"] = 2
+        if curType == "misinformed":
+            self.timers["dBlind"] = 6
+            self.timers["dSwitch"] = 7
+            self.timers["hide"] = 8
+            self.timers["release"] = 9
+        if curType == "control misinformed":
+            #self.timers["dBlind"] = (6)
+            self.timers["dSwitch"] = 7
+            self.timers["hide"] = 8
+            self.timers["release"] = 9
+
+        self.food_loc = random.choice([0,1])
+
+
         self.grid = MultiGrid((width, height))
-
-        # Generate the surrounding walls
         self.grid.wall_rect(0, 0, width, height)
+        self.grid.wall_rect(0, 3, 3, 3)
 
-        self.put_obj(Ball(color="green"), width//2, height//2)
-        self.put_obj(Goal(color="green", reward=1), width//2, height//4)
-        self.put_obj(Goal(color="green", reward=1), width//2, 3*height//4)
+        self.grid.vert_wall(2, 1)
+        self.put_obj(GlassBlock(color='blue', init_state=1), 2, 4)
+        self.put_obj(Lava(), 4, 4)
 
-        # Create a vertical splitting wall
-        self.grid.vert_wall(3, 0)
-        self.grid.vert_wall(width-4, 0)
-        self.put_obj(Box(color="orange",), 3, height//2)
-        self.put_obj(Box(color="orange",), 3, height//2-1)
-        self.put_obj(Box(color="orange",), 3, height//2+1)
-        self.put_obj(Box(color="orange",), width-4, height//2-1)
-        self.put_obj(Box(color="orange",), width-4, height//2)
-        self.put_obj(Box(color="orange",), width-4, height//2+1)
+        #test block
 
-class CompFeedEnv2(para_MultiGridEnv):
-    """
-    Environment with a door and key, sparse reward.
-    Similar to DoorKeyEnv in 
-        https://github.com/maximecb/gym-minigrid/blob/master/gym_minigrid/envs/doorkey.py
-    """
+        # left action = 0, right = 1
+        self.put_obj(Tester(color='red', correct_direction = 0+self.food_loc), 3, 4)
 
-    mission = "use the key to open the door and then get to the goal"
-    metadata = {}
+        self.grid.wall_rect(9, 3, 3, 3)
+        self.grid.vert_wall(9, 1)
+        self.put_obj(GlassBlock(color='blue', init_state=1), 9, 4) 
 
-    def init_agents(self, arg, agent_kwargs):
-        if arg == 0:
-            self.apos = [(2,7,0),(12,5,2),(12,9,2)]
-        for agent in self.apos:
-            self.add_agent(GridAgentInterface(**agent_kwargs))
 
-    def _gen_grid(self, width, height):
-        # Create an empty grid
-        self.grid = MultiGrid((width, height))
+        #puppet guiding arrow
+        direction = random.choice([1,3])
+        if "mis" not in curType:
+            direction = 1+self.food_loc*2
+        self.put_obj(Arrow(color='red', direction=direction), 6, 4)
 
-        # Generate the surrounding walls
-        self.grid.wall_rect(0, 0, width, height)
+        for x in range(7,9):
+            for y in range(1,4):
+                self.put_obj(Lava(), x, y)
+                self.put_obj(Lava(), x, y+4)
 
-        self.put_obj(Ball(color="green"), width//2, height//2)
-        self.put_obj(Goal(color="green", reward=1), width//2, height//4)
-        self.put_obj(Goal(color="green", reward=1), width//2, 3*height//4)
+        self.agent_spawn_kwargs = {'top': (0,3), 'size': (2, 2)}
+        self.agent_spawn_pos = {'player_0': (1,4), 'player_1': (10, 4)}
+        #todo: place puppet agent too
 
-        # Create a vertical splitting wall
-        self.grid.vert_wall(3, 0)
-        self.grid.vert_wall(width-4, 0)
-        self.put_obj(Box(color="orange",), 3, height//2)
-        self.put_obj(Box(color="orange",), 3, height//2-1)
-        self.put_obj(Box(color="orange",), 3, height//2+1)
+        #self.place_agents(**self.agent_spawn_kwargs)
 
-        self.put_obj(Box(color="orange",), width-4, height//4+3)
-        self.put_obj(Box(color="orange",), width-4, height//4+1)
-        self.put_obj(Box(color="orange",), width-4, height//4+2)
-
-        self.put_obj(Wall(), width-3, height//2)
-        self.put_obj(Wall(), width-2, height//2)
-
-        self.put_obj(Box(color="orange",), width-4, 3*height//4-3)
-        self.put_obj(Box(color="orange",), width-4, 3*height//4-2)
-        self.put_obj(Box(color="orange",), width-4, 3*height//4-1)
-        
+    def timer_active(self, name):
+        if name == "bait":
+            if self.food_loc == 0: #6, 2 and 6, 6
+                self.put_obj(Goal(color='green', reward=100), 6, 2)
+                self.put_obj(Goal(color='green', reward=50, size=0.5), 6, 6)
+            else:
+                self.put_obj(Goal(color='green', reward=100), 6, 6)
+                self.put_obj(Goal(color='green', reward=50, size=0.5), 6, 2)
+        elif name == "hide":
+            b1 = Box(color='yellow')
+            b1.contains = self.grid.get(6,2)
+            b1.can_overlap = b1.contains.can_overlap
+            b1.get_reward = b1.contains.get_reward
+            b2 = Box(color='yellow')
+            b2.contains = self.grid.get(6,6)
+            b2.can_overlap = b2.contains.can_overlap
+            b2.get_reward = b2.contains.get_reward
+            self.put_obj(b1, 6, 2)
+            self.put_obj(b2, 6, 6)
+        elif name == "release":
+            self.del_obj(2, 4)
+            self.del_obj(9, 4)
