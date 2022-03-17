@@ -63,6 +63,7 @@ human.start_episode()
 done = False
 env.variants = ['5e']
 for i in range(5):
+    env.hard_reset()
     obs = env.reset()
     nextAct = 2
     while True:
