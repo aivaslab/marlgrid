@@ -5,6 +5,7 @@ import random
 import math
 
 from .compfeed import *
+from .compfeed2 import *
 from .contentFB import *
 from .doorkey import *
 from .empty import *

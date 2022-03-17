@@ -34,8 +34,8 @@ class HumanPlayer:
 
 
 env_config =  {
-    "env_class": "para_CompFeedEnv",
-    "max_steps": 250,
+    "env_class": "para_Mindreading",
+    "max_steps": 50,
     "respawn": True,
     "ghost_mode": True,
     "reward_decay": False,
@@ -45,12 +45,13 @@ env_config =  {
 
 player_interface_config = {
     "view_size": 11,
-    "view_offset": 0,
+    "view_offset": 5,
     "view_tile_size": 32,
     "observation_style": "rich",
-    "see_through_walls": False,
+    "see_through_walls": True,
     "color": "prestige"
 }
+
 
 env_config['agents'] = [GridAgentInterface(**player_interface_config), GridAgentInterface(**player_interface_config)]
 
@@ -79,7 +80,6 @@ for i in range(5):
         nextAct = 2
         if info['player_1'] != {} and info['player_1'][0] == 'act':
             nextAct = info['player_1'][1]
-        
         
         human.save_step(
             obs['player_0'], player_action, reward, done
