@@ -22,13 +22,15 @@ class para_Mindreading(para_MultiGridEnv):
     lava = ['lava', 'block']
     lavaHeight = [1,3,5]
 
-    def hard_reset(self, **kwargs):
+    def hard_reset(self, **subsets):
         self.boxes = [2, 3, 4, 5]
         self.puppets = [1, 2]
         self.followDistance = [-1,0,1]
         self.adversarial = [True, False]
         self.baits = [1, 2, 3]
         self.informed = ['informed', 'uninformed', 'fake']
+        self.hidden = [True, False]
+        self.swapType = ['swap', 'replace']
         self.visibility = ['full', 'curtains', 'keys', 'potion']
         self.cause = ['blocks', 'direction', 'accident', 'inability'] #in inability, paths may be blocked for the leader
         self.rational = [True, False]
@@ -82,25 +84,50 @@ class para_Mindreading(para_MultiGridEnv):
 
         self.agent_spawn_kwargs = {'top': (0,0), 'size': (2, width)}
         self.agent_spawn_pos = {'player_0': (1,1,0), 'player_1': (1, height-2, 2)}
-        
-        self.timers["bait"] = 2
-        self.timers["replace"] = 3
-        self.timers["hide"] = 4
-        self.timers["release2"] = 5
 
-        #todo:
-        '''
-        blind - both sides
-            control with informed param
-        initial cage - this controls blindness and has invis potion
-        random-swap - just reshuffles all foods
-        release1
-        
-        puppet controller - goto specified tile with a*?
-        puppet controller - keep track of where it thinks foods are
+        curTime = 1
+        for bait in range(self.baits):
+            while True:
+                baitLength = 7
+                if self.informed == "informed":
+                    #no hiding
+                    swapTime = 1+random.randint(0, baitLength-1)
+                elif self.informed == "uninformed":
+                    #swap during blind
+                    swapTime = random.randint(1, baitLength-2)
+                    blindStart = random.randint(0, swapTime)
+                    blindStop = random.randint(swapTime, baitLength)
+                    self.add_timer("blind", curTime+blindStart)
+                    self.add_timer("reveal", curTime+blindStop)
+                elif self.informed == "fake":
+                    #swap/hide before or after blind
+                    if random.choice([True, False]):
+                        swapTime = random.randint(1, baitLength)
+                        blindStart = random.randint(0, swapTime-2)
+                        blindStop = random.randint(blindStart, swapTime-1)
+                    else:
+                        swapTime = random.randint(0, baitLength-3)
+                        blindStart = swapTime+random.randint(swapTime, baitLength-1)
+                        blindStop = swapTime+random.randint(blindStart, baitLength)
 
-        agent - test which food we went do and which in food_locs it was
-        '''
+                    #assert blindStart < blindStop
+                    #assert blindStop < baitLength
+
+                    self.add_timer("blind", curTime+blindStart)
+                    self.add_timer("reveal", curTime+blindStop)
+                if bait == 0:
+                    self.add_timer("bait", curTime+swapTime)
+                else:
+                    self.add_timer(self.swapType, curTime+swapTime)
+
+                if bait == self.baits-1 and self.hidden:
+                    self.add_timer("hide", curTime+swapTime+1)
+                curTime += baitLength
+                break
+        self.add_timer("release1", curTime+1)
+        self.add_timer("release2", curTime+2) #release2 also checks for the x coord of actor/correctness/ends in test mode
+
+        print(self.timers)
         #print([x.dir for x in self.agent_instances])
 
     def timer_active(self, name):

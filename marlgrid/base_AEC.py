@@ -553,6 +553,12 @@ class para_MultiGridEnv(ParallelEnv):
 
         return self.observations
 
+    def add_timer(self, name, time):
+        if str(time) in self.timers.keys():
+            self.timers[str(time)].append(name)
+        else:
+            self.timers[str(time)] = [name, ]
+
     def timer_active(self, name):
         pass
 
@@ -570,8 +576,8 @@ class para_MultiGridEnv(ParallelEnv):
         '''
 
         # activate timed events
-        for name in self.timers:
-            if self.timers[name] == self.step_count+1:
+        if str(self.step_count+1) in self.timers.keys():
+            for name in self.timers[str(self.step_count+1)]:
                 #print(name, "event")
                 self.timer_active(name)
 
