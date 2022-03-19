@@ -35,7 +35,7 @@ class para_Mindreading(para_MultiGridEnv):
         self.cause = ['blocks', 'direction', 'accident', 'inability'] #in inability, paths may be blocked for the leader
         self.rational = [True, False]
         self.lava = ['lava', 'block']
-        self.lavaHeight = [1,2,3]
+        self.lavaHeight = [1,2,3,4]
         
         # todo: make this clean
         self.boxes = random.choice(self.boxes)
@@ -50,7 +50,7 @@ class para_Mindreading(para_MultiGridEnv):
         self.lava = random.choice(self.lava)
         self.lavaHeight = random.choice(self.lavaHeight)
         
-        self.startRoom = 3
+        self.startRoom = 2
 
     def _gen_grid(self, width, height):
 
@@ -59,31 +59,47 @@ class para_Mindreading(para_MultiGridEnv):
         #print(self.boxes)
         self.food_locs = list(range(self.boxes))
         random.shuffle(self.food_locs)
-        print(self.food_locs)
+        print(self.lavaHeight)
 
         #startRoom = 3
+        self.release1 = []
+        self.release2 = []
+        releaseGap = self.boxes*2+1
 
-        width = self.boxes*2+3
-        height = self.lavaHeight+self.startRoom*2+1
+        self.width = self.boxes*2+3
+        self.height = self.lavaHeight+self.startRoom*4+2
         #print(boxes, lavaHeight, width, height)
-        self.grid = MultiGrid((width, height))
-        self.grid.wall_rect(0, 0, width, height)
+        self.grid = MultiGrid((self.width, self.height))
+        self.grid.wall_rect(0, 0, self.width, self.height)
+        #self.grid.wall_rect(0, self.startRoom, width, height-self.startRoom)
         
-        for j in range(width):
-            self.put_obj(Wall(), j, self.startRoom-1)
-            self.put_obj(Wall(), j, height-self.startRoom)
+        print(self.startRoom)
+        for j in range(self.width):
+            self.put_obj(Wall(), j, self.startRoom*2)
+            self.put_obj(Wall(), j, self.startRoom)
+            self.put_obj(Wall(), j, self.height-self.startRoom*2-1)
+            self.put_obj(Wall(), j, self.height-self.startRoom-1)
 
         for box in range(self.boxes+1):
             if box < self.boxes:
-                self.put_obj(Block(init_state=1), box*2+2, self.startRoom-1)
-                self.put_obj(Block(init_state=1), box*2+2, height-self.startRoom)
-            for j in range(self.lavaHeight+1):
+                self.put_obj(Block(init_state=1), box*2+2, self.startRoom)
+                self.release1 += [(box*2+2, self.startRoom)]
+                self.put_obj(Block(init_state=1), box*2+2, self.startRoom*2)
+                self.release2 += [(box*2+2, self.startRoom*2)]
+                self.put_obj(Wall(), box*2+1, self.startRoom-1)
+
+                self.put_obj(Block(init_state=1), box*2+2, self.height-self.startRoom-1)
+                self.release1 += [(box*2+2, self.height-self.startRoom-1)]
+                self.put_obj(Block(init_state=1), box*2+2, self.height-self.startRoom*2-1)
+                self.release2 += [(box*2+2, self.height-self.startRoom*2-1)]
+                self.put_obj(Wall(), box*2+1, self.height-2)
+            for j in range(self.lavaHeight):
                 x = box*2+1
-                y = j+self.startRoom
+                y = j+self.startRoom*2+1
                 self.put_obj(Lava(), x, y)
 
-        self.agent_spawn_kwargs = {'top': (0,0), 'size': (2, width)}
-        self.agent_spawn_pos = {'player_0': (1,1,0), 'player_1': (1, height-2, 2)}
+        self.agent_spawn_kwargs = {'top': (0,0), 'size': (2, self.width)}
+        self.agent_spawn_pos = {'player_0': (1,1,0), 'player_1': (1, self.height-2, 2)}
 
         curTime = 1
         for bait in range(self.baits):
@@ -125,16 +141,20 @@ class para_Mindreading(para_MultiGridEnv):
                 curTime += baitLength
                 break
         self.add_timer("release1", curTime+1)
-        self.add_timer("release2", curTime+2) #release2 also checks for the x coord of actor/correctness/ends in test mode
+        self.add_timer("release2", curTime+1+releaseGap) #release2 also checks for the x coord of actor/correctness/ends in test mode
 
         print(self.timers)
         #print([x.dir for x in self.agent_instances])
 
     def timer_active(self, name):
+        if name == "release1":
+            print(self.release1)
+            for x,y in self.release1:
+                self.del_obj(x,y)
         if name == "release2":
-            for box in range(self.boxes):
-                self.del_obj(box*2+2, self.startRoom-1)
-                self.del_obj(box*2+2, self.height-self.startRoom)
+            print(self.release2)
+            for x,y in self.release2:
+                self.del_obj(x,y)
         if name == "bait" or name == "hide":
     	    for box in range(self.boxes):
                 x = box*2+2
