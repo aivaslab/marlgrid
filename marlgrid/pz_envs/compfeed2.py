@@ -3,6 +3,8 @@ from ..objects import *
 from random import randrange
 import random
 import math
+from ..puppets import astar
+from operator import sub
 
 class para_Mindreading(para_MultiGridEnv):
 
@@ -22,6 +24,15 @@ class para_Mindreading(para_MultiGridEnv):
     lava = ['lava', 'block']
     lavaHeight = [1,3,5]
 
+    def pathfind(self, board, start, goal, startDir):
+        #returns dict describing directions at tiles along path
+        path = astar(board, start, goal)
+        pathDict = {}
+        for i, pos in enumerate(path):
+            if i < len(path)-1:
+                pathDict[str(pos)] = [(1, 0), (0, -1), (-1, 0), (0, 1)].index(tuple(map(sub,path[i+1],pos)))
+        return pathDict
+
     def hard_reset(self, **subsets):
         self.boxes = [2, 3, 4, 5]
         self.puppets = [1, 2]
@@ -36,6 +47,7 @@ class para_Mindreading(para_MultiGridEnv):
         self.rational = [True, False]
         self.lava = ['lava', 'block']
         self.lavaHeight = [1,2,3,4]
+        self.sharedRewards = [True, False]
         
         # todo: make this clean
         self.boxes = random.choice(self.boxes)
@@ -45,16 +57,17 @@ class para_Mindreading(para_MultiGridEnv):
         self.baits = random.choice(self.baits)
         self.informed = random.choice(self.informed)
         self.visibility = random.choice(self.visibility)
+        self.swapType = random.choice(self.swapType)
         self.cause = random.choice(self.cause)
         self.rational = random.choice(self.rational)
         self.lava = random.choice(self.lava)
         self.lavaHeight = random.choice(self.lavaHeight)
+        self.sharedRewards = random.choice(self.sharedRewards)
         
         self.startRoom = 2
 
     def _gen_grid(self, width, height):
 
-        self.timers = {}
 
         #print(self.boxes)
         self.food_locs = list(range(self.boxes))
@@ -82,15 +95,15 @@ class para_Mindreading(para_MultiGridEnv):
 
         for box in range(self.boxes+1):
             if box < self.boxes:
-                self.put_obj(Block(init_state=1), box*2+2, self.startRoom)
+                self.put_obj(Block(init_state=1, color="blue"), box*2+2, self.startRoom)
                 self.release1 += [(box*2+2, self.startRoom)]
-                self.put_obj(Block(init_state=1), box*2+2, self.startRoom*2)
+                self.put_obj(Block(init_state=1, color="red"), box*2+2, self.startRoom*2)
                 self.release2 += [(box*2+2, self.startRoom*2)]
                 self.put_obj(Wall(), box*2+1, self.startRoom-1)
 
-                self.put_obj(Block(init_state=1), box*2+2, self.height-self.startRoom-1)
+                self.put_obj(Block(init_state=1, color="blue"), box*2+2, self.height-self.startRoom-1)
                 self.release1 += [(box*2+2, self.height-self.startRoom-1)]
-                self.put_obj(Block(init_state=1), box*2+2, self.height-self.startRoom*2-1)
+                self.put_obj(Block(init_state=1, color="red"), box*2+2, self.height-self.startRoom*2-1)
                 self.release2 += [(box*2+2, self.height-self.startRoom*2-1)]
                 self.put_obj(Wall(), box*2+1, self.height-2)
             for j in range(self.lavaHeight):
@@ -98,9 +111,14 @@ class para_Mindreading(para_MultiGridEnv):
                 y = j+self.startRoom*2+1
                 self.put_obj(Lava(), x, y)
 
+        self.init_timers(releaseGap)
+
         self.agent_spawn_kwargs = {'top': (0,0), 'size': (2, self.width)}
         self.agent_spawn_pos = {'player_0': (1,1,0), 'player_1': (1, self.height-2, 2)}
 
+
+    def init_timers(self, releaseGap):
+        self.timers = {}
         curTime = 1
         for bait in range(self.baits):
             while True:
@@ -132,7 +150,7 @@ class para_Mindreading(para_MultiGridEnv):
                     self.add_timer("blind", curTime+blindStart)
                     self.add_timer("reveal", curTime+blindStop)
                 if bait == 0:
-                    self.add_timer("bait", curTime+swapTime)
+                    self.add_timer("place", curTime+swapTime)
                 else:
                     self.add_timer(self.swapType, curTime+swapTime)
 
@@ -143,9 +161,6 @@ class para_Mindreading(para_MultiGridEnv):
         self.add_timer("release1", curTime+1)
         self.add_timer("release2", curTime+1+releaseGap) #release2 also checks for the x coord of actor/correctness/ends in test mode
 
-        print(self.timers)
-        #print([x.dir for x in self.agent_instances])
-
     def timer_active(self, name):
         if name == "release1":
             print(self.release1)
@@ -155,11 +170,14 @@ class para_Mindreading(para_MultiGridEnv):
             print(self.release2)
             for x,y in self.release2:
                 self.del_obj(x,y)
-        if name == "bait" or name == "hide":
-    	    for box in range(self.boxes):
+        if name == "place" or name == "hide":
+            if name == "hide":
+                pathBox = random.randint(0,self.boxes)
+                # todo: if informed, pick favorite known box
+            for box in range(self.boxes):
                 x = box*2+2
                 y = self.height//2#-self.followDistance
-                if name == "bait":
+                if name == "place":
                     if box == self.food_locs[0]:
                         reward = 100
                         size = 1
@@ -181,6 +199,11 @@ class para_Mindreading(para_MultiGridEnv):
                         b1.get_reward = lambda x: 0
                         #todo: why does one of these have arg? overlap is property?
                     self.put_obj(b1, x, y)
+                    if box == pathBox:
+                        direction = 0 #player 1 direction
+                        pos = (1,1) #player 1 pos
+                        print("pathfinding")
+                        self.infos["player_1"]["path"] = self.pathfind(self.grid.overlapping, pos, (x,y), direction)
         if name == "replace":          
             #swap big food with a no food tile 
             for box in range(self.boxes):
@@ -204,4 +227,11 @@ class para_Mindreading(para_MultiGridEnv):
                     reward = 25
                     size = 0.5
                     self.put_obj(Goal(reward=reward, size=size, color='green'), x, y)
+
+        if "blind" in name:
+            # record whether each agent can see each food
+            pass
+        if name in ["place", "swap", "replace"]:
+            # record knowledge of where food is (if visible to each agent)
+            pass
     	            

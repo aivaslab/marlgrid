@@ -44,7 +44,7 @@ env_config =  {
 }
 
 player_interface_config = {
-    "view_size": 11,
+    "view_size": 17,
     "view_offset": 5,
     "view_tile_size": 32,
     "observation_style": "rich",
@@ -65,25 +65,35 @@ env.variants = ['5e']
 for i in range(5):
     env.hard_reset()
     obs = env.reset()
-    nextAct = 2
+    nextActs = []
+    pathDict = {}
     while True:
 
         #env.unwrapped.render() # OPTIONAL: render the whole scene + birds eye view
 
         player_action = human.action_step(obs['player_0']['pov'])
 
+        if len(nextActs) > 0:
+            nextAct = nextActs.pop(0)
+        else:
+            if len(pathDict.keys())>0:
+                pass
+            else:
+                nextAct = 2
         puppet_action = nextAct
         agent_actions = {'player_0': player_action, 'player_1': puppet_action}
 
         next_obs, rew, done, info = env.step(agent_actions)
-        reward = rew['player_0']
 
-        nextAct = 2
-        if info['player_1'] != {} and info['player_1'][0] == 'act':
-            nextAct = info['player_1'][1]
+        if info['player_1'] != {}:
+            if info['player_1'][0] == 'act':
+                nextActs.append(info['player_1'][1])
+            if info['player_1'][0] == 'path':
+                pathDict = info['player_1'][1]
+                print('got path')
         
         human.save_step(
-            obs['player_0'], player_action, reward, done
+            obs['player_0'], player_action, rew['player_0'], done
         )
 
         obs = next_obs

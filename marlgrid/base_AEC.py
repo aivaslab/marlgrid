@@ -127,6 +127,11 @@ class MultiGrid:
         transparent_fun = np.vectorize(lambda k: (self.obj_reg.key_to_obj_map[k].see_behind() if hasattr(self.obj_reg.key_to_obj_map[k], 'see_behind') else True))
         return ~transparent_fun(self.grid)
 
+    @property
+    def overlapping(self):
+        overlap_fun = np.vectorize(lambda k: (self.obj_reg.key_to_obj_map[k].can_overlap() if hasattr(self.obj_reg.key_to_obj_map[k], 'can_overlap') else True))
+        return ~overlap_fun(self.grid)
+
     def __getitem__(self, *args, **kwargs):
         return self.__class__(
             np.ndarray.__getitem__(self.grid, *args, **kwargs),
