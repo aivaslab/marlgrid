@@ -43,8 +43,9 @@ class para_Mindreading(para_MultiGridEnv):
         boxes = self.params["boxes"]
         for agent in self.agents:
             self.agent_goal[agent] = random.choice(range(boxes))
-            self.agent_goal_reward[agent] = -100
+            self.best_reward[agent] = -100
             for box in range(boxes):
+                self.last_seen_reward[agent+str(box)] = -100
                 if agent+str(box) not in self.can_see.keys():
                     self.can_see[agent+str(box)] = True #default to not hidden until it is
 
@@ -103,13 +104,14 @@ class para_Mindreading(para_MultiGridEnv):
         self.agent_spawn_kwargs = {'top': (0,0), 'size': (2, self.width)}
         self.agent_spawn_pos = {'player_0': (1,1,0), 'player_1': (1, self.height-2, 2)}
 
-        self.agent_goal, self.agent_goal_reward, self.can_see = {}, {}, {}
+        self.agent_goal, self.last_seen_reward, self.can_see, self.best_reward = {}, {}, {}, {}
         self.reset_vision()
         # init timers
         
 
         self.timers = {}
         curTime = 1
+        self.add_timer("init", 1)
         for bait in range(baits):
             while True:
                 baitLength = 7
@@ -215,11 +217,12 @@ class para_Mindreading(para_MultiGridEnv):
             print(name)
             splitName = name.split()
             agent = self.instance_from_name[splitName[1]]
-            for loc in range(boxes):
-                self.can_see[splitName[1] + str(loc)] = False if "blind" in name else True
+            for box in range(boxes):
+                self.can_see[splitName[1] + str(box)] = False if "blind" in name else True
 
         # whenever food updates, remember locations
-        if name in ["place", "swap", "replace", "reveal"]:
+        if name in ["init", "place", "swap", "replace", "reveal"]:
+            print(name)
 
             self.reset_vision()
 
@@ -228,17 +231,27 @@ class para_Mindreading(para_MultiGridEnv):
                 for agent in self.agents:
                     if self.can_see[agent+str(box)]:
                         tile = self.grid.get(x,y)
-                        reward = tile.reward if hasattr(tile, "reward") else -100
-                        if (self.agent_goal[agent] != box) and (reward > self.agent_goal_reward[agent]):
-                            self.agent_goal[agent] = box
-                            self.agent_goal_reward[agent] = reward
-                            print('found box', agent, box, reward)
-                            if agent != "player_0":
-                                a = self.instance_from_name[agent]
-                                print("pathfinding to", x, y)
-                                path = pathfind(self.grid.overlapping, a.pos, (x,y), a.dir)
-                                self.infos[agent]["path"] = path
-                                print(path)
+                        if hasattr(tile, "reward") and hasattr(tile, "size"):
+                            #size used to distinguish treats from boxes
+                            self.last_seen_reward[agent+str(box)] = tile.reward
+                            #print('rew update', agent, box, tile.reward)
+            new_target = False
+            for box in range(boxes):
+                for agent in self.agents:
+                    reward = self.last_seen_reward[agent+str(box)]
+                    if (self.agent_goal[agent] != box) and (reward >= self.best_reward[agent]):
+                        self.agent_goal[agent] = box
+                        self.best_reward[agent] = reward
+                        #print('found box', name, agent, box, reward)
+                        new_target = True
+                        target_agent = agent
+            if new_target and target_agent != "player_0":
+                a = self.instance_from_name[target_agent]
+                x = self.agent_goal[agent]*2+2
+                print("pathfinding to", self.agent_goal[agent], x, y)
+                path = pathfind(self.grid.overlapping, a.pos, (x, y), a.dir)
+                self.infos[agent]["path"] = path
+                print(path)
             
 
     	            
