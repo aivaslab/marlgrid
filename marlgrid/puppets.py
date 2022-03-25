@@ -1,5 +1,18 @@
-#from https://medium.com/@nicholas.w.swift/easy-a-star-pathfinding-7e6689c7f7b2
 
+
+from operator import sub
+
+
+def pathfind(board, start, goal, startDir):
+    #returns dict describing directions at tiles along path
+    path = astar(board, start, goal)
+    pathDict = {}
+    for i, pos in enumerate(path):
+        if i < len(path)-1:
+            pathDict[str(pos)] = [(1, 0), (0, -1), (-1, 0), (0, 1)].index(tuple(map(sub,path[i+1],pos)))
+    return pathDict
+
+#below from https://medium.com/@nicholas.w.swift/easy-a-star-pathfinding-7e6689c7f7b2
 class Node():
     """A node class for A* Pathfinding"""
 
@@ -14,16 +27,6 @@ class Node():
 
     def __eq__(self, other):
         return self.position == other.position
-
-
-def pathfind(self, board, start, goal, startDir):
-    #returns dict describing directions at tiles along path
-    path = astar(board, start, goal)
-    pathDict = {}
-    for i, pos in enumerate(path):
-        if i < len(path)-1:
-            pathDict[str(pos)] = [(1, 0), (0, -1), (-1, 0), (0, 1)].index(tuple(map(sub,path[i+1],pos)))
-    return pathDict
 
 
 def astar(maze, start, end):

@@ -543,7 +543,7 @@ class para_MultiGridEnv(ParallelEnv):
         if self.loadingPickle:
             self.grid = random.choice(self.allRooms)
         else:
-            self._gen_grid(self.width, self.height)
+            self._gen_grid(self.width, self.height, **self.params)
 
         for agent in self.agent_instances:
             if agent.spawn_delay == 0:

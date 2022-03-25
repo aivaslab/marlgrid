@@ -4,7 +4,6 @@ from random import randrange
 import random
 import math
 from ..puppets import astar, pathfind
-from operator import sub
 
 class para_Mindreading(para_MultiGridEnv):
 
@@ -12,8 +11,9 @@ class para_Mindreading(para_MultiGridEnv):
     metadata = {'render.modes': ['human', 'rgb_array'], "name": "mindreadingEnv"}
     variants = []
 
-    def hard_reset(self, **params):
-        params = {
+    def hard_reset(self, params=None):
+        
+        defaults = {
                 "adversarial": [True, False],
                 "hidden": [True, False],
                 "rational": [True, False],
@@ -30,8 +30,13 @@ class para_Mindreading(para_MultiGridEnv):
                 "lava": ['lava', 'block'],
                 }
 
-        for k in params.keys():
-            params[k] = random.choice(params[k])
+        if params == None:
+            params = {}
+        for k in defaults.keys():
+            if k in params.keys():
+                params[k] = random.choice(params[k])
+            else:
+                params[k] = random.choice(defaults[k])
         self.params = params
 
     def _gen_grid(self, width, height,
@@ -176,7 +181,7 @@ class para_Mindreading(para_MultiGridEnv):
                         direction = 0 #player 1 direction
                         pos = (1,1) #player 1 pos
                         print("pathfinding")
-                        self.infos["player_1"]["path"] = self.pathfind(self.grid.overlapping, pos, (x,y), direction)
+                        self.infos["player_1"]["path"] = pathfind(self.grid.overlapping, pos, (x,y), direction)
         if name == "replace":          
             #swap big food with a no food tile 
             for box in range(boxes):
