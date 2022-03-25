@@ -93,8 +93,11 @@ for i in range(5):
 
         if pathDict != {}:
             agent = env.instance_from_name['player_1']
-            direction = pathDict[str(tuple(agent.pos))]
-            print('dir', agent.dir, direction)
+            sname = str(tuple(agent.pos))
+            if sname in pathDict.keys():
+                direction = pathDict[sname]
+            else:
+                direction = random.choice([0,1,2,3])
             relative_dir = (agent.dir - direction) % 4
             if relative_dir == 3 or relative_dir == 2:
                 nextActs.append(1)
@@ -102,7 +105,6 @@ for i in range(5):
                 nextActs.append(0)
             elif relative_dir == 0:
                 nextActs.append(2)
-            print(relative_dir, nextActs)
         
         human.save_step(
             obs['player_0'], player_action, rew['player_0'], done

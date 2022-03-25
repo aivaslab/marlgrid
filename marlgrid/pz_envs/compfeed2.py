@@ -222,7 +222,7 @@ class para_Mindreading(para_MultiGridEnv):
 
         # whenever food updates, remember locations
         if name in ["init", "place", "swap", "replace", "reveal", "release1"]:
-            print(name)
+            #print(name)
 
             self.reset_vision()
 
@@ -248,10 +248,10 @@ class para_Mindreading(para_MultiGridEnv):
             if new_target and target_agent != "player_0":
                 a = self.instance_from_name[target_agent]
                 x = self.agent_goal[target_agent]*2+2
-                print("pathfinding to", self.agent_goal[target_agent], x, y)
+                #print("pathfinding to", self.agent_goal[target_agent], x, y)
                 path = pathfind(self.grid.overlapping, a.pos, (x, y), a.dir)
                 self.infos[agent]["path"] = path
-                print('sending',path)
+                #print('sending',path)
             
 
     	            
