@@ -158,11 +158,11 @@ class para_Mindreading(para_MultiGridEnv):
         boxes = self.params["boxes"]
         y = self.height//2#-self.followDistance
         if name == "release1":
-            for x,y in self.release1:
-                self.del_obj(x,y)
+            for xx,yy in self.release1:
+                self.del_obj(xx,yy)
         if name == "release2":
-            for x,y in self.release2:
-                self.del_obj(x,y)
+            for xx,yy in self.release2:
+                self.del_obj(xx,yy)
         if name == "place" or name == "hide":
             for box in range(boxes):
                 x = box*2+2
@@ -221,7 +221,7 @@ class para_Mindreading(para_MultiGridEnv):
                 self.can_see[splitName[1] + str(box)] = False if "blind" in name else True
 
         # whenever food updates, remember locations
-        if name in ["init", "place", "swap", "replace", "reveal"]:
+        if name in ["init", "place", "swap", "replace", "reveal", "release1"]:
             print(name)
 
             self.reset_vision()

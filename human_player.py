@@ -96,7 +96,7 @@ for i in range(5):
             direction = pathDict[str(tuple(agent.pos))]
             print('dir', agent.dir, direction)
             relative_dir = (agent.dir - direction) % 4
-            if relative_dir == 3:
+            if relative_dir == 3 or relative_dir == 2:
                 nextActs.append(1)
             elif relative_dir == 1:
                 nextActs.append(0)
