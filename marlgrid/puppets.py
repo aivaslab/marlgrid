@@ -16,6 +16,16 @@ class Node():
         return self.position == other.position
 
 
+def pathfind(self, board, start, goal, startDir):
+    #returns dict describing directions at tiles along path
+    path = astar(board, start, goal)
+    pathDict = {}
+    for i, pos in enumerate(path):
+        if i < len(path)-1:
+            pathDict[str(pos)] = [(1, 0), (0, -1), (-1, 0), (0, 1)].index(tuple(map(sub,path[i+1],pos)))
+    return pathDict
+
+
 def astar(maze, start, end):
     """Returns a list of tuples as a path from the given start to the given end in the given maze"""
 
