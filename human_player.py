@@ -44,7 +44,7 @@ env_config =  {
 }
 
 player_interface_config = {
-    "view_size": 17,
+    "view_size": 21,
     "view_offset": 5,
     "view_tile_size": 32,
     "observation_style": "rich",
@@ -86,11 +86,23 @@ for i in range(5):
         next_obs, rew, done, info = env.step(agent_actions)
 
         if info['player_1'] != {}:
-            if info['player_1'][0] == 'act':
-                nextActs.append(info['player_1'][1])
-            if info['player_1'][0] == 'path':
-                pathDict = info['player_1'][1]
-                print('got path')
+            if 'act' in info['player_1'].keys():
+                nextActs.append(info['player_1']['act'])
+            if 'path' in info['player_1'].keys():
+                pathDict = info['player_1']['path']
+
+        if pathDict != {}:
+            agent = env.instance_from_name['player_1']
+            direction = pathDict[str(tuple(agent.pos))]
+            print('dir', agent.dir, direction)
+            relative_dir = (agent.dir - direction) % 4
+            if relative_dir == 3:
+                nextActs.append(1)
+            elif relative_dir == 1:
+                nextActs.append(0)
+            elif relative_dir == 0:
+                nextActs.append(2)
+            print(relative_dir, nextActs)
         
         human.save_step(
             obs['player_0'], player_action, rew['player_0'], done

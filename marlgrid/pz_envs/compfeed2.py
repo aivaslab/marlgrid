@@ -99,10 +99,10 @@ class para_Mindreading(para_MultiGridEnv):
             for j in range(lavaHeight):
                 x = box*2+1
                 y = j+startRoom+atrium+1
-                self.put_obj(Lava(), x, y)
+                self.put_obj(Wall(), x, y)
 
         self.agent_spawn_kwargs = {'top': (0,0), 'size': (2, self.width)}
-        self.agent_spawn_pos = {'player_0': (1,1,0), 'player_1': (1, self.height-2, 2)}
+        self.agent_spawn_pos = {'player_0': (1,1,0), 'player_1': (2, self.height-2, 2)}
 
         self.agent_goal, self.last_seen_reward, self.can_see, self.best_reward = {}, {}, {}, {}
         self.reset_vision()
@@ -247,11 +247,11 @@ class para_Mindreading(para_MultiGridEnv):
                         target_agent = agent
             if new_target and target_agent != "player_0":
                 a = self.instance_from_name[target_agent]
-                x = self.agent_goal[agent]*2+2
-                print("pathfinding to", self.agent_goal[agent], x, y)
+                x = self.agent_goal[target_agent]*2+2
+                print("pathfinding to", self.agent_goal[target_agent], x, y)
                 path = pathfind(self.grid.overlapping, a.pos, (x, y), a.dir)
                 self.infos[agent]["path"] = path
-                print(path)
+                print('sending',path)
             
 
     	            

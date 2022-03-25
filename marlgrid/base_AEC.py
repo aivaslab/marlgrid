@@ -607,6 +607,9 @@ class para_MultiGridEnv(ParallelEnv):
             if agent.active:
                 self.rewards[agent_name] = self.step_reward
                 agent.reward(self.step_reward)
+                
+                #get stuff from timers
+                infos[agent_name] = self.infos[agent_name]
 
                 cur_pos = agent.pos[:]
                 cur_cell = self.grid.get(*cur_pos)
@@ -641,17 +644,19 @@ class para_MultiGridEnv(ParallelEnv):
                             agent.pos = fwd_pos
 
                             # send signal to test next action outputs
+
+
                             if "Test" in str(fwd_cell.__class__):
-                                infos[agent_name] = ("test", fwd_cell.direction)
+                                infos[agent_name]["test"] = fwd_cell.direction
 
                             # send signal to override next action
                             if "Arrow" in str(fwd_cell.__class__):
                                 relative_dir = (agent.dir - fwd_cell.direction) % 4
                                 print(relative_dir)
                                 if relative_dir == 3:
-                                	infos[agent_name] = ("act", 0)
+                                	infos[agent_name]["act"] = 0
                                 if relative_dir == 1:
-                                	infos[agent_name] = ("act", 1)
+                                	infos[agent_name]["act"] = 1
 
 
                         # Remove agent from old cell

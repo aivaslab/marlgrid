@@ -9,7 +9,7 @@ def pathfind(board, start, goal, startDir):
     pathDict = {}
     for i, pos in enumerate(path):
         if i < len(path)-1:
-            pathDict[str(pos)] = [(1, 0), (0, -1), (-1, 0), (0, 1)].index(tuple(map(sub,path[i+1],pos)))
+            pathDict[str(pos)] = [(1, 0), (0, 1), (-1, 0), (0, -1)].index(tuple(map(sub,path[i+1],pos)))
     return pathDict
 
 #below from https://medium.com/@nicholas.w.swift/easy-a-star-pathfinding-7e6689c7f7b2
@@ -95,7 +95,7 @@ def astar(maze, start, end):
             if child not in closed_list:
 
                 # Create the f, g, and h values
-                child.g = current_node.g + 1 + child.solid*100
+                child.g = current_node.g + 1 + child.solid
                 #child.h = ((child.position[0] - end_node.position[0]) ** 2) + ((child.position[1] - end_node.position[1]) ** 2)
                 child.h = (child.position[0] - end_node.position[0]) + (child.position[1] - end_node.position[1])
                 child.f = child.g + child.h
