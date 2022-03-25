@@ -453,7 +453,7 @@ class para_MultiGridEnv(ParallelEnv):
         
         self.agent_instances = {agent for agent in agents} #was dict before?
         
-        print(self.possible_agents, agents)
+        #print(self.possible_agents, agents)
 
         self.instance_from_name = {name: agent for name, agent in zip(self.possible_agents, agents)}
 
