@@ -395,6 +395,24 @@ class Block(WorldObj):
         else:
             fill_coords(img, point_in_line(0.15, 0.15, 0.85, 0.85, r=0.04), c)
             fill_coords(img, point_in_line(0.85, 0.15, 0.15, 0.85, r=0.04), c)
+            
+class Curtain(WorldObj):
+    def __init__(self, color, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.color = color
+        
+    def can_overlap(self):
+        return True
+
+    def see_behind(self):
+        return True
+
+    def str_render(self, dir=0):
+        return "CC"
+
+    def render(self, img):
+        c = COLORS[self.color]
+        fill_coords(img, point_in_rect(0.1, 0.9, 0.1, 0.9), c)
 
 class GlassBlock(WorldObj):
     def __init__(self, init_state, *args, **kwargs):
