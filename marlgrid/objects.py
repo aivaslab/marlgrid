@@ -48,7 +48,7 @@ def point_in_agent():
 	tri_fn = point_in_triangle((0.12, 0.19), (0.87, 0.50), (0.12, 0.81),)
 	c_fn = point_in_circle(0.5, 0.5, 0.15)
 	def fn(x, y):
-		return tri_fn(x,y) and not c_fn(x,y)
+		return tri_fn(x,y)# and not c_fn(x,y)
 	return fn
 
 class RegisteredObjectType(type):
@@ -381,7 +381,7 @@ class Block(WorldObj):
         self.state = init_state
 
     def see_behind(self):
-        return False
+        return True
 
     def str_render(self, dir=0):
         return "BB"
