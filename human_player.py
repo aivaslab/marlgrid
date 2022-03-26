@@ -44,11 +44,11 @@ env_config =  {
 }
 
 player_interface_config = {
-    "view_size": 21,
-    "view_offset": 5,
-    "view_tile_size": 32,
+    "view_size": 19,
+    "view_offset": 3,
+    "view_tile_size": 16,
     "observation_style": "rich",
-    "see_through_walls": True,
+    "see_through_walls": False,
     "color": "prestige"
 }
 
