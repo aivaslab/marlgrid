@@ -12,7 +12,7 @@ class para_DoorKeyEnv(para_MultiGridEnv):
     """
 
     mission = "use the key to open the door and then get to the goal"
-    metadata = {'render.modes': ['human', 'rgb_array'], "name": "doorkey"}
+    metadata = {'render_modes': ['human', 'rgb_array'], "name": "doorkey"}
 
     def _rand_int(self, x, y):
         return randrange(x, y)

@@ -8,8 +8,8 @@ from ..puppets import astar, pathfind
 class para_Mindreading(para_MultiGridEnv):
 
     mission = "get to the goal"
-    metadata = {'render.modes': ['human', 'rgb_array'], "name": "mindreadingEnv"}
-    variants = []
+    metadata = {'render_modes': ['human', 'rgb_array'], "name": "mindreadingEnv"}
+    #variants = []
 
     def hard_reset(self, params=None):
         
