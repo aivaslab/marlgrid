@@ -20,12 +20,12 @@ class para_Mindreading(para_MultiGridEnv):
                 "sharedRewards": [True, False],
                 "boxes": [2,3,4,5],
                 "puppets": [1,2],
-                "followDistance": [-1,0,1],
-                "lavaHeight": [1,2,3,4],
+                "followDistance": [0,1], #0 = d first, 1=sub first
+                "lavaHeight": [2],
                 "baits": [1,2],
                 "informed": ['informed', 'uninformed', 'fake'],
                 "swapType": ['swap', 'replace'],
-                "visibility": ['full', 'curtains', 'keys', 'potion'],
+                "visibility": ['full', 'curtains'], #keys, invisibility potion
                 "cause": ['blocks', 'direction', 'accident', 'inability'],
                 "lava": ['lava', 'block'],
                 }
@@ -66,7 +66,7 @@ class para_Mindreading(para_MultiGridEnv):
                 lava='lava',
                 ):
         startRoom = 2
-        atrium = 3
+        atrium = 2
         self.food_locs = list(range(boxes))
         random.shuffle(self.food_locs)
         self.release1 = []
@@ -75,25 +75,41 @@ class para_Mindreading(para_MultiGridEnv):
         self.width = boxes*2+3
         self.height = lavaHeight+startRoom*2+atrium*2+2
         self.grid = MultiGrid((self.width, self.height))
-        self.grid.wall_rect(0, 0, self.width, self.height)
+        self.grid.wall_rect(0, 1, self.width, self.height-2)
+        
+        self.agent_spawn_kwargs = {'top': (0,0), 'size': (2, self.width)}
+        self.agent_spawn_pos = {}
+        self.agent_box_pos = {}
+        for agent in self.agents:
+            h = 1 if agent == "player_0" else self.height-2
+            d = 1 if agent == "player_0" else 3
+            xx = 2*random.choice(range(boxes))+2
+            self.agent_spawn_pos[agent] = (xx, h, d)
+            self.agent_box_pos[agent] = (xx, h + (1 if agent == "player_0" else -1))
 
         for j in range(self.width):
             self.put_obj(Wall(), j, startRoom+atrium)
             self.put_obj(Wall(), j, startRoom)
             self.put_obj(Wall(), j, self.height-startRoom-atrium-1)
             self.put_obj(Wall(), j, self.height-startRoom-1)
+            if visibility == "curtains":
+                for i in range(startRoom+1, startRoom+atrium):
+                    self.put_obj(Curtain(color='red'), j, i)
+                for i in range(self.height-startRoom-atrium-1+1, self.height-startRoom-1):
+                    self.put_obj(Curtain(color='red'), j, i)
+        self.grid.wall_rect(0, 0, self.width, self.height)
 
         for box in range(boxes+1):
             if box < boxes:
-                self.put_obj(Block(init_state=1, color="blue"), box*2+2, startRoom)
+                self.put_obj(Block(init_state=0, color="blue"), box*2+2, startRoom)
                 self.release1 += [(box*2+2, startRoom)]
-                self.put_obj(Block(init_state=1, color="red"), box*2+2, startRoom+atrium)
+                self.put_obj(Block(init_state=0, color="blue"), box*2+2, startRoom+atrium)
                 self.release2 += [(box*2+2, startRoom+atrium)]
                 self.put_obj(Wall(), box*2+1, startRoom-1)
 
-                self.put_obj(Block(init_state=1, color="blue"), box*2+2, self.height-startRoom-1)
+                self.put_obj(Block(init_state=0, color="blue"), box*2+2, self.height-startRoom-1)
                 self.release1 += [(box*2+2, self.height-startRoom-1)]
-                self.put_obj(Block(init_state=1, color="red"), box*2+2, self.height-startRoom-atrium-1)
+                self.put_obj(Block(init_state=0, color="blue"), box*2+2, self.height-startRoom-atrium-1)
                 self.release2 += [(box*2+2, self.height-startRoom-atrium-1)]
                 self.put_obj(Wall(), box*2+1, self.height-2)
             for j in range(lavaHeight):
@@ -101,8 +117,6 @@ class para_Mindreading(para_MultiGridEnv):
                 y = j+startRoom+atrium+1
                 self.put_obj(Wall(), x, y)
 
-        self.agent_spawn_kwargs = {'top': (0,0), 'size': (2, self.width)}
-        self.agent_spawn_pos = {'player_0': (1,1,0), 'player_1': (2, self.height-2, 2)}
 
         self.agent_goal, self.last_seen_reward, self.can_see, self.best_reward = {}, {}, {}, {}
         self.reset_vision()
@@ -156,7 +170,8 @@ class para_Mindreading(para_MultiGridEnv):
 
     def timer_active(self, name):
         boxes = self.params["boxes"]
-        y = self.height//2#-self.followDistance
+        followDistance = self.params["followDistance"]
+        y = self.height//2-followDistance
         if name == "release1":
             for xx,yy in self.release1:
                 self.del_obj(xx,yy)
@@ -192,7 +207,7 @@ class para_Mindreading(para_MultiGridEnv):
             #swap big food with a no food tile 
             for box in range(boxes):
                 x = box*2+2
-                y = self.height//2#-self.followDistance
+                y = self.height//2-followDistance
                 if box == self.food_locs[2]:
                     reward = 100
                     size = 1
@@ -202,7 +217,7 @@ class para_Mindreading(para_MultiGridEnv):
         if name == "swap":
             for box in range(boxes):
                 x = box*2+2
-                y = self.height//2#-self.followDistance
+                y = self.height//2-followDistance
                 if box == self.food_locs[1]:
                     reward = 100
                     size = 1
@@ -211,11 +226,21 @@ class para_Mindreading(para_MultiGridEnv):
                     reward = 25
                     size = 0.5
                     self.put_obj(Goal(reward=reward, size=size, color='green'), x, y)
+                    
+        if "blind" in name:
+            splitName = name.split()
+            b = self.grid.get(*self.agent_box_pos[splitName[1]])
+            b.state = 1
+            
+        if "reveal" in name:
+            splitName = name.split()
+            b = self.grid.get(*self.agent_box_pos[splitName[1]])
+            b.state = 0
 
         if "blind" in name or "reveal" in name:
             # record whether each agent can see each food
-            print(name)
             splitName = name.split()
+            print(splitName)
             agent = self.instance_from_name[splitName[1]]
             for box in range(boxes):
                 self.can_see[splitName[1] + str(box)] = False if "blind" in name else True
@@ -223,8 +248,6 @@ class para_Mindreading(para_MultiGridEnv):
         # whenever food updates, remember locations
         if name in ["init", "place", "swap", "replace", "reveal", "release1"]:
             #print(name)
-
-            self.reset_vision()
 
             for box in range(boxes):
                 x = box*2+2
@@ -234,7 +257,11 @@ class para_Mindreading(para_MultiGridEnv):
                         if hasattr(tile, "reward") and hasattr(tile, "size"):
                             #size used to distinguish treats from boxes
                             self.last_seen_reward[agent+str(box)] = tile.reward
-                            #print('rew update', agent, box, tile.reward)
+                            print('rew update', agent, box, tile.reward)
+                        elif not self.grid.get(x,y) and self.last_seen_reward[agent+str(box)] != 0:
+                            print('0ing', box)
+                            self.last_seen_reward[agent+str(box)] = 0
+                        
             new_target = False
             for box in range(boxes):
                 for agent in self.agents:
@@ -242,13 +269,13 @@ class para_Mindreading(para_MultiGridEnv):
                     if (self.agent_goal[agent] != box) and (reward >= self.best_reward[agent]):
                         self.agent_goal[agent] = box
                         self.best_reward[agent] = reward
-                        #print('found box', name, agent, box, reward)
+                        print('found box', name, agent, box, reward)
                         new_target = True
                         target_agent = agent
             if new_target and target_agent != "player_0":
                 a = self.instance_from_name[target_agent]
                 x = self.agent_goal[target_agent]*2+2
-                #print("pathfinding to", self.agent_goal[target_agent], x, y)
+                print("pathfinding to", self.agent_goal[target_agent], x, y)
                 path = pathfind(self.grid.overlapping, a.pos, (x, y), a.dir)
                 self.infos[agent]["path"] = path
                 #print('sending',path)
