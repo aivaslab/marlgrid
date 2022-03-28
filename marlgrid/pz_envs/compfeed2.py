@@ -159,65 +159,63 @@ class para_Mindreading(para_MultiGridEnv):
         curTime = 1
         self.add_timer("init", 1)
         for bait in range(0, baits*baitSize, baitSize):
-            while True:
-                baitLength = 7
+            baitLength = 7
+            informed2 = informed
+            if informed == "half1":
+                informed2 = "informed" if bait == 0 else "uninformed"
+            elif informed == "half2":
+                informed2 = "informed" if bait == 1 else "uninformed"
                 
-                if informed == "half1":
-                    informed2 = "informed" if bait == 0 else "uninformed"
-                elif informed == "half2":
-                    informed2 = "informed" if bait == 1 else "uninformed"
-                    
-                if informed2 == "informed":
-                    #no hiding
-                    swapTime = random.randint(1, baitLength-1)
-                elif informed2 == "uninformed":
-                    #swap during blind
-                    swapTime = random.randint(1, baitLength-2)
-                    blindStart = random.randint(0, swapTime)
-                    blindStop = random.randint(swapTime, baitLength)
-                    self.add_timer("blind player_1", curTime+blindStart)
-                    self.add_timer("reveal player_1", curTime+blindStop)
-                elif informed2 == "fake":
-                    #swap/hide before or after blind
-                    if random.choice([True, False]):
-                        swapTime = random.randint(1, baitLength)
-                        blindStart = random.randint(0, swapTime-2)
-                        blindStop = random.randint(blindStart, swapTime-1)
-                    else:
-                        swapTime = random.randint(0, baitLength-3)
-                        blindStart = swapTime+random.randint(swapTime, baitLength-1)
-                        blindStop = swapTime+random.randint(blindStart, baitLength)
-
-                    assert blindStart < blindStop
-                    assert blindStop < baitLength
-
-                    self.add_timer("blind player_1", curTime+blindStart)
-                    self.add_timer("reveal player_1", curTime+blindStop)
-                if bait < 2:
-                    if baitSize == 2:
-                        self.add_timer("place12", curTime+swapTime)
-                    elif baitSize == 1:
-                        if firstBig == bait:
-                            self.add_timer("place1", curTime+swapTime)
-                        else:
-                            self.add_timer("place2", curTime+swapTime)
+            if informed2 == "informed":
+                #no hiding
+                swapTime = random.randint(1, baitLength-1)
+            elif informed2 == "uninformed":
+                #swap during blind
+                swapTime = random.randint(1, baitLength-2)
+                blindStart = random.randint(0, swapTime)
+                blindStop = random.randint(swapTime, baitLength)
+                self.add_timer("blind player_1", curTime+blindStart)
+                self.add_timer("reveal player_1", curTime+blindStop)
+            elif informed2 == "fake":
+                #swap/hide before or after blind
+                if random.choice([True, False]):
+                    swapTime = random.randint(1, baitLength)
+                    blindStart = random.randint(0, swapTime-2)
+                    blindStop = random.randint(blindStart, swapTime-1)
                 else:
-                    self.add_timer(swapType, curTime+swapTime)
-                if hidden:                    
-                    if bait+baitSize < 2:
-                        if firstBig == bait:
-                            self.add_timer("hide1", curTime+swapTime+1)
-                        else:
-                            self.add_timer("hide2", curTime+swapTime+1)
-                    if bait+baitSize > baits-1:
-                            self.add_timer("hideall", curTime+swapTime+1)
-                curTime += baitLength
-                break
+                    swapTime = random.randint(0, baitLength-3)
+                    blindStart = swapTime+random.randint(swapTime, baitLength-1)
+                    blindStop = swapTime+random.randint(blindStart, baitLength)
+
+                assert blindStart < blindStop
+                assert blindStop < baitLength
+
+                self.add_timer("blind player_1", curTime+blindStart)
+                self.add_timer("reveal player_1", curTime+blindStop)
+            if bait < 2:
+                if baitSize == 2:
+                    self.add_timer("place12", curTime+swapTime)
+                elif baitSize == 1:
+                    if firstBig == bait:
+                        self.add_timer("place1", curTime+swapTime)
+                    else:
+                        self.add_timer("place2", curTime+swapTime)
+            else:
+                self.add_timer(swapType, curTime+swapTime)
+            if hidden:                    
+                if bait+baitSize < 2:
+                    if firstBig == bait:
+                        self.add_timer("hide1", curTime+swapTime+1)
+                    else:
+                        self.add_timer("hide2", curTime+swapTime+1)
+                if bait+baitSize > baits-1:
+                        self.add_timer("hideall", curTime+swapTime+1)
+            curTime += baitLength
         self.add_timer("release1", curTime+1)
         self.add_timer("release2", curTime+1+releaseGap) #release2 also checks for the x coord of actor/correctness/ends in test mode
 
     def timer_active(self, name):
-        #print(name)
+        print(name)
         boxes = self.params["boxes"]
         firstBig = self.params["firstBig"]
         followDistance = self.params["followDistance"]
@@ -265,7 +263,6 @@ class para_Mindreading(para_MultiGridEnv):
             #currently only does big food, should it do small? 
             for box in range(boxes):
                 x = box*2+2
-                y = self.height//2-followDistance
                 if box == self.food_locs[2]:
                     self.put_obj(Goal(reward=100, size=1.0, color='green'), x, y)
                 if box == self.food_locs[3]:
@@ -276,7 +273,6 @@ class para_Mindreading(para_MultiGridEnv):
             #remove one of the foods
             for box in range(boxes):
                 x = box*2+2
-                y = self.height//2-followDistance
                 if box == self.food_locs[firstBig] and "1" in name:
                     self.del_obj(x,y)
                 elif box == self.food_locs[not firstBig] and "2" in name:
@@ -284,7 +280,6 @@ class para_Mindreading(para_MultiGridEnv):
         if name == "swap":
             for box in range(boxes):
                 x = box*2+2
-                y = self.height//2-followDistance
                 if box == self.food_locs[1]:
                     self.put_obj(Goal(reward=100, size=1.0, color='green'), x, y)
                 elif box == self.food_locs[0]:
@@ -341,60 +336,5 @@ class para_Mindreading(para_MultiGridEnv):
                 #print('sending',path)
             
 
-scenario_configs = {
-    "informed control": {
-        "informed": 'informed',
-    },
-    "partially uninformed": {
-        "informed": ['half1', 'half2'],
-        "firstBig": [True, False],
-        "baitSize": 1,
-        "baits": 2,
-        "hidden": True,
-    },    
-    "removed informed": {
-        "informed": "informed",
-        "swapType": 'remove',
-        "baitSize": 2,
-        "baits": 2,
-        "hidden": True,
-    },
-    "removed uninformed": {
-        "informed": "uninformed",
-        "swapType": 'remove',
-        "baitSize": 2,
-        "baits": 2,
-        "hidden": True,
-    },
-    "moved": {
-        "informed": "uninformed", #but uninformed about first baiting
-        "swapType": 'move',
-        "baitSize": 2,
-        "baits": 2,
-        "hidden": True,
-    },
-    "replaced": {
-        "informed": "uninformed",
-        "swapType": 'replace',
-        "baitSize": 2,
-        "baits": 2,
-        "hidden": True,
-    },
-    "misinformed": {
-        "informed": "uninformed",
-        "swapType": 'mis', #any bucket swapped with a food
-        "baitSize": 2,
-        "baits": 2,
-        "hidden": True,
-    },
-    "swapped": {
-        "informed": "uninformed",
-        "swapType": 'swap',
-        "baitSize": 2,
-        "baits": 2,
-        "hidden": True,
-    }
-
-}
 
     	            
