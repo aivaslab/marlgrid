@@ -4,6 +4,7 @@ from random import randrange
 import random
 import math
 from ..puppets import astar, pathfind
+import copy
 
 class para_Mindreading(para_MultiGridEnv):
 
@@ -13,31 +14,53 @@ class para_Mindreading(para_MultiGridEnv):
 
     def hard_reset(self, params=None):
         
-        defaults = {
+        allOfThem = {
                 "adversarial": [True, False],
                 "hidden": [True, False],
                 "rational": [True, False],
                 "sharedRewards": [True, False],
+                "firstBig": [True, False],#whether we place big first
                 "boxes": [2],#[2,3,4,5],
-                "puppets": [1,2],
+                "puppets": [0,1,2],
                 "followDistance": [0,1], #0 = d first, 1=sub first
                 "lavaHeight": [2],
                 "baits": [1,2],
-                "informed": ['informed', 'uninformed', 'fake'],
-                "swapType": ['swap', 'replace'],
+                "baitSize": [1,2],
+                "informed": ['informed', 'uninformed', 'fake', 'half1', 'half2'],
+                "swapType": ['swap', 'replace', 'remove', 'move', 'mis'],
                 "visibility": ['full', 'curtains'], #keys, invisibility potion
                 "cause": ['blocks', 'direction', 'accident', 'inability'],
                 "lava": ['lava', 'block'],
                 }
+        defaults = {
+                "adversarial": [True],
+                "hidden": [True],
+                "rational": [True],
+                "sharedRewards": [True],
+                "firstBig": [True],
+                "boxes": [5],#[2,3,4,5],
+                "puppets": [1],
+                "followDistance": [0], #0 = d first, 1=sub first
+                "lavaHeight": [2],
+                "baits": [1],
+                "baitSize": [2],
+                "informed": ['informed'],
+                "swapType": ['swap'],
+                "visibility": ['curtains'], #keys, invisibility potion
+                "cause": ['blocks', 'direction', 'accident', 'inability'],
+                "lava": ['lava', 'block'],
+                }
 
+        newParams = copy.copy(params)
         if params == None:
             params = {}
         for k in defaults.keys():
             if k in params.keys():
-                params[k] = random.choice(params[k])
+                if isinstance(params[k], list):
+                    newParams[k] = random.choice(params[k])
             else:
-                params[k] = random.choice(defaults[k])
-        self.params = params
+                newParams[k] = random.choice(defaults[k])
+        self.params = newParams
 
     def reset_vision(self):
         boxes = self.params["boxes"]
@@ -54,16 +77,18 @@ class para_Mindreading(para_MultiGridEnv):
                 hidden=True,
                 rational=True,
                 sharedRewards=False,
-                boxes=3,
+                boxes=5,
                 puppets=1,
                 followDistance=0,
-                lavaHeight=3,
+                lavaHeight=2,
                 baits=1,
+                baitSize=2,
                 informed='informed',
                 swapType='swap',
-                visibility='full',
+                visibility='curtains',
                 cause='blocks',
                 lava='lava',
+                firstBig=True,
                 ):
         startRoom = 2
         atrium = 2
@@ -133,20 +158,26 @@ class para_Mindreading(para_MultiGridEnv):
         self.timers = {}
         curTime = 1
         self.add_timer("init", 1)
-        for bait in range(baits):
+        for bait in range(0, baits*baitSize, baitSize):
             while True:
                 baitLength = 7
-                if informed == "informed":
+                
+                if informed == "half1":
+                    informed2 = "informed" if bait == 0 else "uninformed"
+                elif informed == "half2":
+                    informed2 = "informed" if bait == 1 else "uninformed"
+                    
+                if informed2 == "informed":
                     #no hiding
-                    swapTime = 1+random.randint(0, baitLength-1)
-                elif informed == "uninformed":
+                    swapTime = random.randint(1, baitLength-1)
+                elif informed2 == "uninformed":
                     #swap during blind
                     swapTime = random.randint(1, baitLength-2)
                     blindStart = random.randint(0, swapTime)
                     blindStop = random.randint(swapTime, baitLength)
                     self.add_timer("blind player_1", curTime+blindStart)
                     self.add_timer("reveal player_1", curTime+blindStop)
-                elif informed == "fake":
+                elif informed2 == "fake":
                     #swap/hide before or after blind
                     if random.choice([True, False]):
                         swapTime = random.randint(1, baitLength)
@@ -162,21 +193,33 @@ class para_Mindreading(para_MultiGridEnv):
 
                     self.add_timer("blind player_1", curTime+blindStart)
                     self.add_timer("reveal player_1", curTime+blindStop)
-                if bait == 0:
-                    self.add_timer("place", curTime+swapTime)
+                if bait < 2:
+                    if baitSize == 2:
+                        self.add_timer("place12", curTime+swapTime)
+                    elif baitSize == 1:
+                        if firstBig == bait:
+                            self.add_timer("place1", curTime+swapTime)
+                        else:
+                            self.add_timer("place2", curTime+swapTime)
                 else:
                     self.add_timer(swapType, curTime+swapTime)
-
-                if bait == baits-1:
-                    if hidden:
-                        self.add_timer("hide", curTime+swapTime+1)
+                if hidden:                    
+                    if bait+baitSize < 2:
+                        if firstBig == bait:
+                            self.add_timer("hide1", curTime+swapTime+1)
+                        else:
+                            self.add_timer("hide2", curTime+swapTime+1)
+                    if bait+baitSize > baits-1:
+                            self.add_timer("hideall", curTime+swapTime+1)
                 curTime += baitLength
                 break
         self.add_timer("release1", curTime+1)
         self.add_timer("release2", curTime+1+releaseGap) #release2 also checks for the x coord of actor/correctness/ends in test mode
 
     def timer_active(self, name):
+        #print(name)
         boxes = self.params["boxes"]
+        firstBig = self.params["firstBig"]
         followDistance = self.params["followDistance"]
         y = self.height//2-followDistance
         if name == "release1":
@@ -185,78 +228,86 @@ class para_Mindreading(para_MultiGridEnv):
         if name == "release2":
             for xx,yy in self.release2:
                 self.del_obj(xx,yy)
-        if name == "place" or name == "hide":
+        if "place" in name or "hide" in name or "remove" in name:
             for box in range(boxes):
                 x = box*2+2
-                if name == "place":
-                    if box == self.food_locs[0]:
-                        reward = 100
-                        size = 1
-                        self.put_obj(Goal(reward=reward, size=size, color='green'), x, y)
-                    elif box == self.food_locs[1]:
-                        reward = 25
-                        size = 0.5
-                        self.put_obj(Goal(reward=reward, size=size, color='green'), x, y)
+                if "place" in name:
+                    if box == self.food_locs[0] and "1" in name:
+                        self.put_obj(Goal(reward=100, size=1.0, color='green'), x, y)
+                    if box == self.food_locs[1] and "2" in name:
+                        self.put_obj(Goal(reward=25, size=0.5, color='green'), x, y)
     	            
-                elif name == "hide":
-                    b1 = Box(color="yellow")
-                    c = self.grid.get(x,y)
-                    if c:
-        	            b1.contains = c
-        	            b1.can_overlap = c.can_overlap
-        	            b1.get_reward = c.get_reward
-                    else:
-                        b1.can_overlap = lambda : True
-                        b1.get_reward = lambda x: 0
-                        #todo: why does one of these have arg? overlap is property?
-                    self.put_obj(b1, x, y)
+                elif "hide" in name:
+                    if "all" in name or (box == self.food_locs[0] and "1" in name) or (box == self.food_locs[1] and "2" in name):
+                        b1 = Box(color="yellow")
+                        c = self.grid.get(x,y)
+                        if c:
+            	            b1.contains = c
+            	            b1.can_overlap = c.can_overlap
+            	            b1.get_reward = c.get_reward
+                        else:
+                            b1.can_overlap = lambda : True
+                            b1.get_reward = lambda x: 0
+                            #todo: why does one of these have arg? overlap is property?
+                        self.put_obj(b1, x, y)
         if name == "replace":          
-            #swap big food with a no food tile 
+            #swap big food with a no food tile
+            #currently only does big food, should it do small? 
             for box in range(boxes):
                 x = box*2+2
                 y = self.height//2-followDistance
                 if box == self.food_locs[2]:
-                    reward = 100
-                    size = 1
-                    self.put_obj(Goal(reward=reward, size=size, color='green'), x, y)
+                    self.put_obj(Goal(reward=100, size=1.0, color='green'), x, y)
                 elif box == self.food_locs[0]:
+                    self.del_obj(x,y)
+        if name == "move":          
+            #swap big food with a no food tile
+            #currently only does big food, should it do small? 
+            for box in range(boxes):
+                x = box*2+2
+                y = self.height//2-followDistance
+                if box == self.food_locs[2]:
+                    self.put_obj(Goal(reward=100, size=1.0, color='green'), x, y)
+                if box == self.food_locs[3]:
+                    self.put_obj(Goal(reward=25, size=0.5, color='green'), x, y)
+                elif box == self.food_locs[0] or box == self.food_locs[1]:
+                    self.del_obj(x,y)            
+        if "remove" in name:          
+            #remove one of the foods
+            for box in range(boxes):
+                x = box*2+2
+                y = self.height//2-followDistance
+                if box == self.food_locs[firstBig] and "1" in name:
+                    self.del_obj(x,y)
+                elif box == self.food_locs[not firstBig] and "2" in name:
                     self.del_obj(x,y)
         if name == "swap":
             for box in range(boxes):
                 x = box*2+2
                 y = self.height//2-followDistance
                 if box == self.food_locs[1]:
-                    reward = 100
-                    size = 1
-                    self.put_obj(Goal(reward=reward, size=size, color='green'), x, y)
+                    self.put_obj(Goal(reward=100, size=1.0, color='green'), x, y)
                 elif box == self.food_locs[0]:
-                    reward = 25
-                    size = 0.5
-                    self.put_obj(Goal(reward=reward, size=size, color='green'), x, y)
-                    
-        if "blind" in name:
-            splitName = name.split()
-            b = self.grid.get(*self.agent_box_pos[splitName[1]])
-            b.state = 1
-            b.see_behind = lambda : False
-            
-        if "reveal" in name:
-            splitName = name.split()
-            b = self.grid.get(*self.agent_box_pos[splitName[1]])
-            b.state = 0
-            b.see_behind = lambda : True
-
+                    self.put_obj(Goal(reward=25, size=0.5, color='green'), x, y)
+             
         if "blind" in name or "reveal" in name:
-            # record whether each agent can see each food
             splitName = name.split()
-            #print(splitName)
+            b = self.grid.get(*self.agent_box_pos[splitName[1]])
+        
+            if "blind" in name:
+                b.state = 1
+                b.see_behind = lambda : False
+            if "reveal" in name:
+                b.state = 0
+                b.see_behind = lambda : True
+            # record whether each agent can see each food
             agent = self.instance_from_name[splitName[1]]
             for box in range(boxes):
                 self.can_see[splitName[1] + str(box)] = False if "blind" in name else True
 
         # whenever food updates, remember locations
-        if name in ["init", "place", "swap", "replace", "reveal", "release1"]:
-            #print(name)
+        if name in ["init", "swap", "replace", "reveal", "release1"] or "remove" in name or "place" in name:
+            #=print(name)
 
             for box in range(boxes):
                 x = box*2+2
@@ -289,5 +340,61 @@ class para_Mindreading(para_MultiGridEnv):
                 self.infos[agent]["path"] = path
                 #print('sending',path)
             
+
+scenario_configs = {
+    "informed control": {
+        "informed": 'informed',
+    },
+    "partially uninformed": {
+        "informed": ['half1', 'half2'],
+        "firstBig": [True, False],
+        "baitSize": 1,
+        "baits": 2,
+        "hidden": True,
+    },    
+    "removed informed": {
+        "informed": "informed",
+        "swapType": 'remove',
+        "baitSize": 2,
+        "baits": 2,
+        "hidden": True,
+    },
+    "removed uninformed": {
+        "informed": "uninformed",
+        "swapType": 'remove',
+        "baitSize": 2,
+        "baits": 2,
+        "hidden": True,
+    },
+    "moved": {
+        "informed": "uninformed", #but uninformed about first baiting
+        "swapType": 'move',
+        "baitSize": 2,
+        "baits": 2,
+        "hidden": True,
+    },
+    "replaced": {
+        "informed": "uninformed",
+        "swapType": 'replace',
+        "baitSize": 2,
+        "baits": 2,
+        "hidden": True,
+    },
+    "misinformed": {
+        "informed": "uninformed",
+        "swapType": 'mis', #any bucket swapped with a food
+        "baitSize": 2,
+        "baits": 2,
+        "hidden": True,
+    },
+    "swapped": {
+        "informed": "uninformed",
+        "swapType": 'swap',
+        "baitSize": 2,
+        "baits": 2,
+        "hidden": True,
+    }
+
+}
 
     	            
