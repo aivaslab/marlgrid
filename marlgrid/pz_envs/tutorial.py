@@ -11,7 +11,7 @@ class para_TutorialEnv(para_MultiGridEnv):
     """
 
     mission = "get to the goal"
-    metadata = {'render.modes': ['human', 'rgb_array'], "name": "tutorial"}
+    metadata = {'render_modes': ['human', 'rgb_array'], "name": "tutorial"}
     random_mode = True
     seed_mode = False
     curSeed = 1337
