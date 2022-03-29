@@ -6,6 +6,84 @@ import math
 from ..puppets import astar, pathfind
 import copy
 
+
+scenario_configs = {
+    "tutorial_step_1": {
+        "puppets": 0,
+        "boxes": [5],
+        "baitSize": [1,2],
+        "followDistance": [0,1],
+        "visibility": ['full', 'curtains'],
+        "informed": "informed",
+        "hidden": [False, True]
+    },
+    "tutorial_step_2": {
+        #more varied training, including easier cases than eval
+        "puppets": 1,
+        "boxes": [5],
+        "baitSize": [2],
+        "followDistance": [0,1],
+        "visibility": ['curtains'],
+        "informed": "informed",
+        "hidden": [False, True]
+    },
+    "tutorial_step_2_eval": {
+        #single test config that must be passed
+        "puppets": 1,
+        "boxes": [5],
+        "baitSize": [2],
+        "visibility": 'curtains',
+        "informed": "informed",
+        "hidden": True
+    },
+    "informed control": {
+        "informed": 'informed',
+    },
+    "partially uninformed": {
+        "informed": ['half1', 'half2'],
+        "firstBig": [True, False],
+        "baitSize": 1,
+        "baits": 2,
+    },    
+    "removed informed": {
+        "informed": "informed",
+        "swapType": 'remove',
+        "baitSize": 2,
+        "baits": 3,
+    },
+    "removed uninformed": {
+        "informed": "uninformed",
+        "swapType": 'remove',
+        "baitSize": 2,
+        "baits": 2,
+    },
+    "moved": {
+        "informed": "informed", #but uninformed about first baiting
+        "swapType": 'move',
+        "baitSize": 2,
+        "baits": 2,
+    },
+    "replaced": {
+        "informed": "uninformed",
+        "swapType": 'replace',
+        "baitSize": 1,
+        "baits": 3,
+    },
+    "misinformed": {
+        "informed": "uninformed",
+        "swapType": ['swap', 'replace'], #any bucket swapped with a food
+        "baitSize": 2,
+        "baits": 2,
+    },
+    "swapped": {
+        "informed": "uninformed",
+        "swapType": 'swap',
+        "baitSize": 2,
+        "baits": 2,
+    }
+
+}
+
 class para_Mindreading(para_MultiGridEnv):
 
     mission = "get to the goal"
@@ -36,7 +114,7 @@ class para_Mindreading(para_MultiGridEnv):
                 "adversarial": [True],
                 "hidden": [True],
                 "rational": [True],
-                "sharedRewards": [True],
+                "sharedRewards": [False],
                 "firstBig": [True],
                 "boxes": [5],#[2,3,4,5],
                 "puppets": [1],
@@ -109,12 +187,16 @@ class para_Mindreading(para_MultiGridEnv):
         self.agent_spawn_kwargs = {'top': (0,0), 'size': (2, self.width)}
         self.agent_spawn_pos = {}
         self.agent_box_pos = {}
-        for agent in self.agents:
+        for k, agent in enumerate(self.agents):
             h = 1 if agent == "player_0" else self.height-2
             d = 1 if agent == "player_0" else 3
             xx = 2*random.choice(range(boxes))+2
             self.agent_spawn_pos[agent] = (xx, h, d)
             self.agent_box_pos[agent] = (xx, h + (1 if agent == "player_0" else -1))
+            a = self.instance_from_name[agent]
+            if k > puppets:
+                a.spawn_delay = 1000
+                a.active = False
 
         for j in range(self.width):
             self.put_obj(Wall(), j, startRoom+atrium)
@@ -166,6 +248,7 @@ class para_Mindreading(para_MultiGridEnv):
             elif informed == "half2":
                 informed2 = "informed" if bait == 1 else "uninformed"
                 
+                
             if informed2 == "informed":
                 #no hiding
                 swapTime = random.randint(1, baitLength-1)
@@ -201,7 +284,10 @@ class para_Mindreading(para_MultiGridEnv):
                     else:
                         self.add_timer("place2", curTime+swapTime)
             else:
-                self.add_timer(swapType, curTime+swapTime)
+                st = swapType
+                if "remove" in st:
+                    st = st + random.choice(["1","2"])
+                self.add_timer(st, curTime+swapTime)
             if hidden:                    
                 if bait+baitSize < 2:
                     if firstBig == bait:
@@ -248,6 +334,12 @@ class para_Mindreading(para_MultiGridEnv):
                             b1.get_reward = lambda x: 0
                             #todo: why does one of these have arg? overlap is property?
                         self.put_obj(b1, x, y)
+                        
+                elif "remove" in name:
+                    if box == self.food_locs[0] and "1" in name:
+                        self.del_obj(x,y)
+                    elif box == self.food_locs[1] and "2" in name:
+                        self.del_obj(x,y)
         if name == "replace":          
             #swap big food with a no food tile
             #currently only does big food, should it do small? 
@@ -259,8 +351,7 @@ class para_Mindreading(para_MultiGridEnv):
                 elif box == self.food_locs[0]:
                     self.del_obj(x,y)
         if name == "move":          
-            #swap big food with a no food tile
-            #currently only does big food, should it do small? 
+            #both foods are moved to new locations
             for box in range(boxes):
                 x = box*2+2
                 if box == self.food_locs[2]:
@@ -268,15 +359,7 @@ class para_Mindreading(para_MultiGridEnv):
                 if box == self.food_locs[3]:
                     self.put_obj(Goal(reward=25, size=0.5, color='green'), x, y)
                 elif box == self.food_locs[0] or box == self.food_locs[1]:
-                    self.del_obj(x,y)            
-        if "remove" in name:          
-            #remove one of the foods
-            for box in range(boxes):
-                x = box*2+2
-                if box == self.food_locs[firstBig] and "1" in name:
-                    self.del_obj(x,y)
-                elif box == self.food_locs[not firstBig] and "2" in name:
-                    self.del_obj(x,y)
+                    self.del_obj(x,y)        
         if name == "swap":
             for box in range(boxes):
                 x = box*2+2
@@ -329,11 +412,12 @@ class para_Mindreading(para_MultiGridEnv):
                         target_agent = agent
             if new_target and target_agent != "player_0":
                 a = self.instance_from_name[target_agent]
-                x = self.agent_goal[target_agent]*2+2
-                #print("pathfinding to", self.agent_goal[target_agent], x, y)
-                path = pathfind(self.grid.overlapping, a.pos, (x, y), a.dir)
-                self.infos[agent]["path"] = path
-                #print('sending',path)
+                if a.active:
+                    x = self.agent_goal[target_agent]*2+2
+                    #print("pathfinding to", self.agent_goal[target_agent], x, y)
+                    path = pathfind(self.grid.overlapping, a.pos, (x, y), a.dir)
+                    self.infos[agent]["path"] = path
+                    #print('sending',path)
             
 
 
