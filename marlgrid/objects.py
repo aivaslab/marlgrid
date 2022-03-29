@@ -27,11 +27,6 @@ COLORS = {
 	"shadow": np.array([35,25,30]), # nice dark purpley color for cells agents can't see.
 }
 STATES = IntEnum("door_state", "open closed locked")
-'''STATES = {
-	"open": 0,
-	"closed": 1,
-	"locked": 2
-}'''
 
 # Used to map colors to integers
 COLOR_TO_IDX = dict({v: k for k, v in enumerate(COLORS.keys())})

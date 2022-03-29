@@ -324,7 +324,7 @@ class MultiGrid:
                         img_agent = cls.cache_render_obj(top_agent, tile_size, subdivs)
                     else:
                         img_agent = cls.cache_render_obj(obj.agents[0], tile_size, subdivs)
-                    img = cls.blend_tiles(img, img_agent)
+                    img = cls.blend_tiles(img_agent, img)
 
             # Render the tile border if any of the corners are black.
             if (img[([0,0,-1,-1],[0,-1,0,-1])]==0).all(axis=-1).any():
@@ -552,15 +552,17 @@ class para_MultiGridEnv(ParallelEnv):
                     flag = flag+1
                     pass
 
-        for agent in self.agent_instances:
+        for k, agent in enumerate(self.agent_instances):
             if agent.spawn_delay == 0:
                 try:
                     #print(*self.agent_spawn_pos[agent.name])
                     self.put_obj(agent, self.agent_spawn_pos[agent.name][0], self.agent_spawn_pos[agent.name][1]) #x,y,dir
                     agent.dir = self.agent_spawn_pos[agent.name][2]
+                    
                     #print('success')
                 except:
                     self.place_obj(agent, **self.agent_spawn_kwargs)
+                
                 agent.activate()
 
         return self.observations
