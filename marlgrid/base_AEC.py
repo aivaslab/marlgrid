@@ -446,7 +446,7 @@ class para_MultiGridEnv(ParallelEnv):
             high=255,
             shape=(self.agent_view_size, self.agent_view_size, 3),
             dtype='uint8'
-        ) for agent in self.possible_agents}
+            ) for agent in self.possible_agents}
 
         #self.action_space = self.action_spaces[self.possible_agents[0]]
         #self.observation_space = self.observation_spaces[self.possible_agents[0]]
@@ -461,11 +461,11 @@ class para_MultiGridEnv(ParallelEnv):
         self.loadingPickle = False
         self.allRooms = []
 
-    @functools.lru_cache(maxsize=None)
+    #@functools.lru_cache(maxsize=None)
     def action_space(self, agent):
         return self.action_spaces[agent]
-    
-    @functools.lru_cache(maxsize=None)
+        
+    #@functools.lru_cache(maxsize=None)
     def observation_space(self, agent):
         return self.observation_spaces[agent]
 
