@@ -6,6 +6,9 @@ from marlgrid.agents import GridAgentInterface
 #from marlgrid.envs import env_from_config
 from marlgrid.pz_envs import *
 
+
+
+
 class HumanPlayer:
     def __init__(self):
         self.player_window = InteractivePlayerWindow(
@@ -43,6 +46,7 @@ env_config =  {
     "height": 9
 }
 
+
 player_interface_config = {
     "view_size": 19,
     "view_offset": 3,
@@ -61,9 +65,13 @@ human = HumanPlayer()
 
 human.start_episode()
 done = False
-env.variants = ['5e']
+
 for i in range(5):
-    env.hard_reset()
+    config = random.choice(list(scenario_configs.keys()))
+    config = "partially uninformed"
+    print(config)
+    env.hard_reset(scenario_configs[config])
+    print(env.params)
     obs = env.reset()
     nextActs = []
     pathDict = {}
