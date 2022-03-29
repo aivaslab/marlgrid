@@ -9,6 +9,7 @@ import gym_minigrid
 from enum import IntEnum
 import math
 import warnings
+import functools
 
 from .objects import WorldObj, Wall, Goal, Lava, GridAgent, BonusTile, BulkObj, COLORS
 from .agents import GridAgentInterface
@@ -370,7 +371,7 @@ def unused_raw_MultiGridEnv():
     function to convert from a ParallelEnv to an AEC env
     '''
     env = para_MultiGridEnv()
-    env = from_parallel(env)
+    env = parallel_to_aec(env)
     return env
 
 class para_MultiGridEnv(ParallelEnv):
@@ -460,8 +461,11 @@ class para_MultiGridEnv(ParallelEnv):
         self.loadingPickle = False
         self.allRooms = []
 
+    @functools.lru_cache(maxsize=None)
     def action_space(self, agent):
         return self.action_spaces[agent]
+    
+    @functools.lru_cache(maxsize=None)
     def observation_space(self, agent):
         return self.observation_spaces[agent]
 
