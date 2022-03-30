@@ -552,7 +552,6 @@ class para_MultiGridEnv(ParallelEnv):
         self.env_done = False
 
         for name, agent in zip(self.agents+self.puppets, list(self.agent_instances.union(self.puppet_instances))):
-            print(name, agent)
             agent.agents = []
             agent.name = name
             agent.nextActions = []
@@ -807,8 +806,6 @@ class para_MultiGridEnv(ParallelEnv):
 
         #self._accumulate_rewards() #not defined 
         
-        #print('infos', self.infos)
-        
         for agent in self.puppets:
             a = self.instance_from_name[agent]
             if self.infos[agent] != {}:
@@ -819,7 +816,6 @@ class para_MultiGridEnv(ParallelEnv):
                     a.pathDict = self.infos[agent]['path']
 
             if a.pathDict != {}:
-                #print(a.pathDict)
                 sname = str(tuple(a.pos))
                 if sname in a.pathDict.keys():
                     direction = a.pathDict[sname]
@@ -834,9 +830,14 @@ class para_MultiGridEnv(ParallelEnv):
                     a.nextActs.append(2)
         
         #clear puppets from obs, rewards, dones, infos
-        #print(self.observations, self.rewards, self.dones, self.infos)
+        
+        robservations = {agent: self.observations[agent] for agent in self.agents}
+        rrewards = {agent: self.rewards[agent] for agent in self.agents}
+        rdones = {agent: self.dones[agent] for agent in self.agents}
+        rinfos = {agent: self.infos[agent] for agent in self.agents}
 
-        return self.observations, self.rewards, self.dones, self.infos
+
+        return robservations, rrewards, rdones, rinfos
 
     def gen_obs_grid(self, agent):
 
