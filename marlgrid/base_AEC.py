@@ -439,18 +439,20 @@ class para_MultiGridEnv(ParallelEnv):
         #self.agent_name_mapping = dict(zip(self.possible_agents, list(range(len(self.possible_agents)))))
 
         # Gym spaces are defined and documented here: https://gym.openai.com/docs/#spaces
-        self.action_spaces = {agent: Discrete(7) for agent in self.possible_agents}
+        #removed march
+        #self.action_spaces = {agent: Discrete(7) for agent in self.possible_agents}
         
         self.env_done = False
         self.step_count = 0
         #obshape = (45,45,3)
         
-        self.observation_spaces = {agent: Box(
+        #removed march
+        '''self.observation_spaces = {agent: Box(
             low=0,
             high=255,
             shape=(self.agent_view_size, self.agent_view_size, 3),
             dtype='uint8'
-            ) for agent in self.possible_agents}
+            ) for agent in self.possible_agents}'''
 
         #self.action_space = self.action_spaces[self.possible_agents[0]]
         #self.observation_space = self.observation_spaces[self.possible_agents[0]]
@@ -466,13 +468,20 @@ class para_MultiGridEnv(ParallelEnv):
         self.loadingPickle = False
         self.allRooms = []
 
-    #@functools.lru_cache(maxsize=None)
+    @functools.lru_cache(maxsize=None)
     def action_space(self, agent):
-        return self.action_spaces[agent]
+        return Discrete(7)
+        #return self.action_spaces[agent]
         
-    #@functools.lru_cache(maxsize=None)
+    @functools.lru_cache(maxsize=None)
     def observation_space(self, agent):
-        return self.observation_spaces[agent]
+        return Box(
+            low=0,
+            high=255,
+            shape=(self.agent_view_size, self.agent_view_size, 3),
+            dtype='uint8'
+            )
+        #return self.observation_spaces[agent]
 
     def seed(self, seed=1337):
         # Seed the random number generator
