@@ -52,6 +52,9 @@ class GridAgentInterface(GridAgent):
         self.prestige_scale = prestige_scale
         self.allow_negative_prestige = allow_negative_prestige
         self.spawn_delay = spawn_delay
+        
+        self.nextActs = []
+        self.pathDict = {}
 
         if self.prestige_beta > 1:
             # warnings.warn("prestige_beta must be between 0 and 1. Using default 0.99")
@@ -166,6 +169,8 @@ class GridAgentInterface(GridAgent):
         self.pos = None
         self.carrying = None
         self.mission = ""
+        self.nextActs = []
+        self.pathDict = {}
         if new_episode:
             self.prestige = 0
             self.bonus_state = None

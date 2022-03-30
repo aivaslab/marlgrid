@@ -10,6 +10,7 @@ from enum import IntEnum
 import math
 import warnings
 import functools
+import random
 
 from .objects import WorldObj, Wall, Goal, Lava, GridAgent, BonusTile, BulkObj, COLORS
 from .agents import GridAgentInterface
@@ -386,6 +387,7 @@ class para_MultiGridEnv(ParallelEnv):
     def __init__(
         self,
         agents = [],
+        puppets = [],
         grid_size=None,
         width=11,
         height=11,
@@ -429,9 +431,11 @@ class para_MultiGridEnv(ParallelEnv):
         self.agent_view_size=45
 
         self.agents = agents
+        self.puppets = puppets
         self.grid = MultiGrid(shape=(width,height)) #added this, not sure where grid comes from in og
 
         self.possible_agents = ["player_" + str(r) for r in range(len(agents))]
+        self.possible_puppets = ["player_" + str(r) for r in range(len(agents), len(agents)+len(puppets))]
         #self.agent_name_mapping = dict(zip(self.possible_agents, list(range(len(self.possible_agents)))))
 
         # Gym spaces are defined and documented here: https://gym.openai.com/docs/#spaces
@@ -452,11 +456,12 @@ class para_MultiGridEnv(ParallelEnv):
         #self.observation_space = self.observation_spaces[self.possible_agents[0]]
         #cannot define these because it makes uncallable
         
-        self.agent_instances = {agent for agent in agents} #was dict before?
+        self.agent_instances = {agent for agent in agents} 
+        self.puppet_instances = {puppet for puppet in puppets} 
         
         #print(self.possible_agents, agents)
 
-        self.instance_from_name = {name: agent for name, agent in zip(self.possible_agents, agents)}
+        self.instance_from_name = {name: agent for name, agent in zip(self.possible_agents+self.possible_puppets, agents+puppets)}
 
         self.loadingPickle = False
         self.allRooms = []
@@ -512,6 +517,13 @@ class para_MultiGridEnv(ParallelEnv):
         user is no longer using the environment.
         '''
         pass
+        
+    
+    def agents_and_puppets(self):
+        '''
+        For legacy agent functions to also work with puppets
+        '''
+        return self.agents + self.puppets
 
     def reset(self):
         '''
@@ -528,19 +540,23 @@ class para_MultiGridEnv(ParallelEnv):
         Here it sets up the state dictionary which is used by step() and the observations dictionary which is used by step() and observe()
         '''
         self.agents = self.possible_agents[:]
+        self.puppets = self.possible_puppets[:]
         self.rewards = {agent: 0 for agent in self.agents}
         self._cumulative_rewards = {agent: 0 for agent in self.agents}
         self.has_reached_goal = {agent: False for agent in self.agents}
         self.dones = {agent: False for agent in self.agents}
-        self.infos = {agent: {} for agent in self.agents}
+        self.infos = {agent: {} for agent in self.agents_and_puppets()}
         self.state = {agent: NONE for agent in self.agents}
         self.observations = {agent: self.gen_agent_obs(a) for agent, a in zip(self.agents, self.agent_instances)}
         self.step_count = 0
         self.env_done = False
 
-        for name, agent in zip(self.agents, list(self.agent_instances)):
+        for name, agent in zip(self.agents+self.puppets, list(self.agent_instances.union(self.puppet_instances))):
+            print(name, agent)
             agent.agents = []
             agent.name = name
+            agent.nextActions = []
+            agent.pathDict = {}
             self.instance_from_name[name] = agent
             agent.reset(new_episode=True)
 
@@ -556,14 +572,12 @@ class para_MultiGridEnv(ParallelEnv):
                     flag = flag+1
                     pass
 
-        for k, agent in enumerate(self.agent_instances):
+        for k, agent in enumerate(self.agent_instances.union(self.puppet_instances)):
             if agent.spawn_delay == 0:
                 try:
-                    #print(*self.agent_spawn_pos[agent.name])
+                    print(agent, agent.name, *self.agent_spawn_pos[agent.name])
                     self.put_obj(agent, self.agent_spawn_pos[agent.name][0], self.agent_spawn_pos[agent.name][1]) #x,y,dir
                     agent.dir = self.agent_spawn_pos[agent.name][2]
-                    
-                    #print('success')
                 except:
                     self.place_obj(agent, **self.agent_spawn_kwargs)
                 
@@ -609,7 +623,22 @@ class para_MultiGridEnv(ParallelEnv):
                 agent.activate()
                 self._cumulative_rewards[agent] = 0
 
-        infos = {agent: {} for agent in self.agents}
+        
+        #get all puppet actions
+        puppet_actions = {}
+        for agent in self.puppets:
+            a = self.instance_from_name[agent]
+
+            if len(a.nextActs) > 0:
+                nextAct = a.nextActs.pop(0)
+            else:
+                if len(a.pathDict.keys())>0:
+                    pass
+                else:
+                    nextAct = 2
+            puppet_actions[agent] = nextAct
+            
+        actions = dict(actions, **puppet_actions)
 
         for agent_name in actions:
             action = actions[agent_name]
@@ -622,7 +651,8 @@ class para_MultiGridEnv(ParallelEnv):
                 agent.reward(self.step_reward)
                 
                 #get stuff from timers
-                infos[agent_name] = self.infos[agent_name]
+                #infos[agent_name] = self.infos[agent_name]
+                
 
                 cur_pos = agent.pos[:]
                 cur_cell = self.grid.get(*cur_pos)
@@ -660,16 +690,16 @@ class para_MultiGridEnv(ParallelEnv):
 
 
                             if "Test" in str(fwd_cell.__class__):
-                                infos[agent_name]["test"] = fwd_cell.direction
+                                self.infos[agent_name]["test"] = fwd_cell.direction
 
                             # send signal to override next action
                             if "Arrow" in str(fwd_cell.__class__):
                                 relative_dir = (agent.dir - fwd_cell.direction) % 4
                                 print(relative_dir)
                                 if relative_dir == 3:
-                                	infos[agent_name]["act"] = 0
+                                	self.infos[agent_name]["act"] = 0
                                 if relative_dir == 1:
-                                	infos[agent_name]["act"] = 1
+                                	self.infos[agent_name]["act"] = 1
 
 
                         # Remove agent from old cell
@@ -776,8 +806,37 @@ class para_MultiGridEnv(ParallelEnv):
         self._cumulative_rewards = {agent: self._cumulative_rewards[agent] + self.rewards[agent] for agent in self.agents}
 
         #self._accumulate_rewards() #not defined 
+        
+        print('infos', self.infos)
+        
+        for agent in self.puppets:
+            a = self.instance_from_name[agent]
+            if self.infos[agent] != {}:
+                print('received', self.infos[agent])
+                if 'act' in self.infos[agent].keys():
+                    a.nextActs.append(self.infos[agent]['act'])
+                if 'path' in self.infos[agent].keys():
+                    a.pathDict = self.infos[agent]['path']
 
-        return self.observations, self.rewards, self.dones, infos
+            if a.pathDict != {}:
+                print(a.pathDict)
+                sname = str(tuple(a.pos))
+                if sname in a.pathDict.keys():
+                    direction = a.pathDict[sname]
+                else:
+                    direction = random.choice([0,1,2,3])
+                relative_dir = (a.dir - direction) % 4
+                if relative_dir == 3 or relative_dir == 2:
+                    a.nextActs.append(1)
+                elif relative_dir == 1:
+                    a.nextActs.append(0)
+                elif relative_dir == 0:
+                    a.nextActs.append(2)
+        
+        #clear puppets from obs, rewards, dones, infos
+        #print(self.observations, self.rewards, self.dones, self.infos)
+
+        return self.observations, self.rewards, self.dones, self.infos
 
     def gen_obs_grid(self, agent):
 
