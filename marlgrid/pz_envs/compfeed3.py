@@ -418,7 +418,7 @@ class para_Mindreading2(para_MultiGridEnv):
                     #print("pathfinding to", self.agent_goal[target_agent], x, y)
                     path = pathfind(self.grid.overlapping, a.pos, (x, y), a.dir)
                     self.infos[agent]["path"] = path
-                    print('sending',path)
+                    #print('sending',path)
             
 
 
