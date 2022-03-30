@@ -575,7 +575,7 @@ class para_MultiGridEnv(ParallelEnv):
         for k, agent in enumerate(self.agent_instances.union(self.puppet_instances)):
             if agent.spawn_delay == 0:
                 try:
-                    print(agent, agent.name, *self.agent_spawn_pos[agent.name])
+                    #print(agent, agent.name, *self.agent_spawn_pos[agent.name])
                     self.put_obj(agent, self.agent_spawn_pos[agent.name][0], self.agent_spawn_pos[agent.name][1]) #x,y,dir
                     agent.dir = self.agent_spawn_pos[agent.name][2]
                 except:
@@ -807,7 +807,7 @@ class para_MultiGridEnv(ParallelEnv):
 
         #self._accumulate_rewards() #not defined 
         
-        print('infos', self.infos)
+        #print('infos', self.infos)
         
         for agent in self.puppets:
             a = self.instance_from_name[agent]
@@ -819,7 +819,7 @@ class para_MultiGridEnv(ParallelEnv):
                     a.pathDict = self.infos[agent]['path']
 
             if a.pathDict != {}:
-                print(a.pathDict)
+                #print(a.pathDict)
                 sname = str(tuple(a.pos))
                 if sname in a.pathDict.keys():
                     direction = a.pathDict[sname]
