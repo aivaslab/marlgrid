@@ -812,7 +812,7 @@ class para_MultiGridEnv(ParallelEnv):
         for agent in self.puppets:
             a = self.instance_from_name[agent]
             if self.infos[agent] != {}:
-                print('received', self.infos[agent])
+                #print('received', self.infos[agent])
                 if 'act' in self.infos[agent].keys():
                     a.nextActs.append(self.infos[agent]['act'])
                 if 'path' in self.infos[agent].keys():
