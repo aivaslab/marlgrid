@@ -228,7 +228,7 @@ class MultiGrid:
         """
 
         if vis_mask is None:
-            vis_mask = np.ones((self.width, self.height), dtype=bool)
+            vis_mask = np.ones((self.width, self.height), dtype="uint8") #was bool
 
         array = np.zeros((self.width, self.height, 3), dtype="uint8")
 
@@ -247,7 +247,7 @@ class MultiGrid:
         raise NotImplementedError
         width, height, channels = array.shape
         assert channels == 3
-        vis_mask[i, j] = np.ones(shape=(width, height), dtype=np.bool)
+        vis_mask[i, j] = np.ones(shape=(width, height), dtype="uint8") #was bool
         grid = cls((width, height))
 
     
