@@ -899,7 +899,7 @@ class para_MultiGridEnv(ParallelEnv):
                 ret['reward'] = getattr(agent, 'step_reward', 0)
             if agent.observe_position:
                 agent_pos = agent.pos if agent.pos is not None else (0,0)
-                ret['position'] = np.array(agent_pos)/np.array([self.width, self.height], dtype=np.float)
+                ret['position'] = np.array(agent_pos)/np.array([self.width, self.height], dtype="uint8") #was np.float
             if agent.observe_orientation:
                 agent_dir = agent.dir if agent.dir is not None else 0
                 ret['orientation'] = agent_dir
