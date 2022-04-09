@@ -113,7 +113,7 @@ class GridAgentInterface(GridAgent):
             new_color = (
                     prestige_scaled * blue +
                     (1.-prestige_scaled) * red
-                ).astype(np.int)
+                ).astype(int) #was np.int
 
             grey_pixels = (np.diff(tile, axis=-1)==0).all(axis=-1)
 
