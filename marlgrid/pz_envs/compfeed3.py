@@ -302,7 +302,6 @@ class para_Mindreading2(para_MultiGridEnv):
         self.add_timer("release2", curTime+1+releaseGap) #release2 also checks for the x coord of actor/correctness/ends in test mode
 
     def timer_active(self, name):
-        print(name)
         boxes = self.params["boxes"]
         firstBig = self.params["firstBig"]
         followDistance = self.params["followDistance"]
