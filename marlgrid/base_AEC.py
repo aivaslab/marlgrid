@@ -856,7 +856,7 @@ class para_MultiGridEnv(ParallelEnv):
             # below, not sure orientation is correct but as of 6/27/2020 that doesn't matter because
             # agent views are usually square and this grid won't be used for anything.
             grid = MultiGrid((agent.view_size, agent.view_size), orientation=agent.dir+1)
-            vis_mask = np.zeros((agent.view_size, agent.view_size), dtype=np.bool)
+            vis_mask = np.zeros((agent.view_size, agent.view_size), dtype="uint8") #was np.bool
             return grid, vis_mask
 
         topX, topY, botX, botY = agent.get_view_exts()
