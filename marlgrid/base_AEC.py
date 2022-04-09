@@ -468,12 +468,12 @@ class para_MultiGridEnv(ParallelEnv):
         self.loadingPickle = False
         self.allRooms = []
 
-    @functools.lru_cache(maxsize=None)
+    #@functools.lru_cache(maxsize=None)
     def action_space(self, agent):
         return Discrete(7)
         #return self.action_spaces[agent]
         
-    @functools.lru_cache(maxsize=None)
+    #@functools.lru_cache(maxsize=None)
     def observation_space(self, agent):
         return Box(
             low=0,
