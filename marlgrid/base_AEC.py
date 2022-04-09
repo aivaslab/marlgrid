@@ -664,8 +664,8 @@ class para_MultiGridEnv(ParallelEnv):
 
                 cur_pos = agent.pos[:]
                 cur_cell = self.grid.get(*cur_pos)
-                #print('cell:' , cur_cell)
                 fwd_pos = agent.front_pos[:]
+                print('cell:' , cur_pos, cur_cell, fwd_pos)
                 fwd_cell = self.grid.get(*fwd_pos)
                 agent_moved = False
 
