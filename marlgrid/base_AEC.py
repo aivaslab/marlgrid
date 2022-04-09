@@ -478,7 +478,7 @@ class para_MultiGridEnv(ParallelEnv):
         return Box(
             low=0,
             high=255,
-            shape=(3, self.agent_view_size, self.agent_view_size),
+            shape=(self.agent_view_size, self.agent_view_size, 3),
             dtype='uint8'
             )
         #return self.observation_spaces[agent]
