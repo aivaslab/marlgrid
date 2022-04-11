@@ -525,7 +525,7 @@ class Box(WorldObj):
 		#turn into what you're carrying
 		#unused
 		pass
-		print('toggling')
+		#print('toggling')
 		#self.__class__ = self.contains.__class__
 		#self.render = self.contains.render
 		#self.reward = self.contains.reward
