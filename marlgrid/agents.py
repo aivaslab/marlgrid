@@ -34,8 +34,13 @@ class GridAgentInterface(GridAgent):
             prestige_scale=2,
             allow_negative_prestige=False,
             spawn_delay=0,
+            view_type=0,
+            move_type=0,
             **kwargs):
         super().__init__(**kwargs)
+
+        self.view_type = view_type
+        self.move_type = move_type
 
         self.view_size = view_size
         self.view_tile_size = view_tile_size
@@ -238,7 +243,9 @@ class GridAgentInterface(GridAgent):
 
         
     def get_view_pos(self):
-        return (self.view_size // 2, self.view_size - 1 - self.view_offset)
+        if self.view_type == 0:
+            return (self.view_size // 2, self.view_size - 1 - self.view_offset)
+        return self.pos
 
 
     def get_view_exts(self):

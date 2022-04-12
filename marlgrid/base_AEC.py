@@ -859,11 +859,15 @@ class para_MultiGridEnv(ParallelEnv):
             vis_mask = np.zeros((agent.view_size, agent.view_size), dtype="uint8") #was np.bool
             return grid, vis_mask
 
-        topX, topY, botX, botY = agent.get_view_exts()
+        if agent.view_type == 0:
+            #egocentric view
+            topX, topY, botX, botY = agent.get_view_exts()
+            grid = self.grid.slice(
+                topX, topY, agent.view_size, agent.view_size, rot_k=agent.dir + 1
+            )
+        else:
+            grid = self.grid
 
-        grid = self.grid.slice(
-            topX, topY, agent.view_size, agent.view_size, rot_k=agent.dir + 1
-        )
 
         # Process occluders and visibility
         # Note that this incurs some slight performance cost
