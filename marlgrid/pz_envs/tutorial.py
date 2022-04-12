@@ -15,7 +15,7 @@ class para_TutorialEnv(para_MultiGridEnv):
     random_mode = True
     seed_mode = False
     curSeed = 1337
-    variants = ["1a", "1b", "1c", "1d", "2a", "2b", "2c", "2d", "2e", "2f", "3a", "3b"]
+    variants = ["1a", "1b", "1c", "1d", "1e", "1f", "2a", "2b", "2c", "2d", "2e", "2f", "3a", "3b"]
     curvariant = 0;
     loading_mode = False
     saving_mode = False
@@ -49,9 +49,30 @@ class para_TutorialEnv(para_MultiGridEnv):
                 elif num == 2:
                     self.place_obj(Key(color=colors[0], state=randrange(1,4)), top=(0, 0), size=(width, height))
 
-        self.place_obj(Goal(color="green", reward=100), top=(0, 0), size=(width, height))
-        if variant[1] == "e":
-            self.place_obj(Goal(color="green", reward=50, size=0.5), top=(0, 0), size=(width, height))
+        self.box_locs = []
+        self.box_locs.append(self.place_obj(Goal(color="green", reward=100), top=(0, 0), size=(width, height)))
+        if variant[1] in "eg":
+            #preferences
+            self.box_locs.append(self.place_obj(Goal(color="green", reward=50, size=0.5), top=(0, 0), size=(width, height)))
+        if variant[1] in "fg":
+            #memory
+            self.timers = {}
+            self.add_timer("hide", random.randint(2, 5))
+            pass
+            
+    def timer_active(self, name):
+        if "hide" in name:
+            for x,y in self.box_locs:
+                b1 = Box(color="yellow")
+                c = self.grid.get(x,y)
+                if c:
+	                b1.contains = c
+	                b1.can_overlap = c.can_overlap
+	                b1.get_reward = c.get_reward
+                else:
+                    b1.can_overlap = lambda : True
+                    b1.get_reward = lambda x: self.box_reward
+                self.put_obj(b1, x, y)
 
     def _set_seed(self, seed):
         if seed != -1:
@@ -62,6 +83,7 @@ class para_TutorialEnv(para_MultiGridEnv):
         return randrange(x, y)
 
     def _gen_grid(self, width, height):
+        print("generating")
         self.grid = MultiGrid((width, height))
         if self.seed_mode:
             random.seed(self.curSeed)
@@ -135,7 +157,7 @@ class para_TutorialEnv(para_MultiGridEnv):
 
             self.agent_spawn_kwargs = {'top': (2,2), 'size': (width-4, height-4)}
 
-        elif "4" in variant: #memory
+        elif "4" in variant: #memory navigation
 
             self.grid.wall_rect(0, 1, width-1, height-2)
 
