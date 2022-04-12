@@ -465,6 +465,8 @@ class para_MultiGridEnv(ParallelEnv):
 
         self.instance_from_name = {name: agent for name, agent in zip(self.possible_agents+self.possible_puppets, agents+puppets)}
 
+        #print(self.instance_from_name)
+
         self.loadingPickle = False
         self.allRooms = []
 
@@ -495,11 +497,11 @@ class para_MultiGridEnv(ParallelEnv):
         agents can stack, since the logic for moving them around gets a bit messy.
         Prints a message and drops into pdb if there's an inconsistency.
         '''
-        agent_locs = [[] for _ in range(len(self.agents))]
+        agent_locs = [[] for _ in range(len(self.agents+self.puppets))]
         for i in range(self.grid.width):
             for j in range(self.grid.height):
                 x = self.grid.get(i,j)
-                for k,agent in enumerate(self.agents):
+                for k,agent in enumerate(self.agents+self.puppets):
                     if x==agent:
                         agent_locs[k].append(('top', (i,j)))
                     if hasattr(x, 'agents') and agent in x.agents:
@@ -665,20 +667,34 @@ class para_MultiGridEnv(ParallelEnv):
                 cur_pos = agent.pos[:]
                 cur_cell = self.grid.get(*cur_pos)
                 fwd_pos = agent.front_pos[:]
-                #print('cell:' , cur_pos, cur_cell, fwd_pos)
                 fwd_cell = self.grid.get(*fwd_pos)
                 agent_moved = False
+                #print('cell:' , cur_pos, cur_cell, fwd_pos)
 
-                # Rotate left
-                if action == agent.actions.left:
-                    agent.dir = (agent.dir - 1) % 4
+                if agent.move_type == 0:
+                    # Rotate left
+                    if action == agent.actions.left:
+                        agent.dir = (agent.dir - 1) % 4
 
-                # Rotate right
-                elif action == agent.actions.right:
-                    agent.dir = (agent.dir + 1) % 4
+                    # Rotate right
+                    elif action == agent.actions.right:
+                        agent.dir = (agent.dir + 1) % 4
 
-                # Move forward
-                elif action == agent.actions.forward:
+                if action == agent.actions.forward:
+                    #move forward
+                    fwd_pos = agent.front_pos[:]
+                    fwd_cell = self.grid.get(*fwd_pos)
+                elif agent.move_type == 1:
+                    #move cardinally
+                    if action == agent.actions.left:
+                        fwd_pos = agent.left_pos[:]
+                    if action == agent.actions.right:
+                        fwd_pos = agent.right_pos[:]
+                    if action == agent.actions.done:
+                        fwd_pos = agent.back_pos[:]
+                    fwd_cell = self.grid.get(*fwd_pos)
+
+                if action == agent.actions.forward or agent.move_type == 1:
                     # Under the follow conditions, the agent can move forward.
                     can_move = fwd_cell is None or fwd_cell.can_overlap()
                     if self.ghost_mode is False and isinstance(fwd_cell, GridAgent):
@@ -784,12 +800,6 @@ class para_MultiGridEnv(ParallelEnv):
                     else:
                         pass
 
-                # Done action (not used by default)
-                elif action == agent.actions.done:
-                    pass
-
-                else:
-                    raise ValueError(f"Environment can't handle action {action}.")
 
                 agent.on_step(fwd_cell if agent_moved else None)
 
@@ -892,7 +902,6 @@ class para_MultiGridEnv(ParallelEnv):
         """
         Generate the agent's view (partially observable, low-resolution encoding)
         """
-        # issue: should return uint8 observations, not int64
         grid, vis_mask = self.gen_obs_grid(agent)
         grid_image = grid.render(tile_size=agent.view_tile_size, visible_mask=vis_mask, top_agent=agent)
         if agent.observation_style=='image':

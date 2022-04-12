@@ -16,7 +16,7 @@ class GridAgentInterface(GridAgent):
         pickup = 3  # Pick up an object
         drop = 4  # Drop an object
         toggle = 5  # Toggle/activate an object
-        done = 6  # Done completing task
+        done = 6  # Done completing task, OR move backward
 
     def __init__(
             self,
@@ -144,6 +144,8 @@ class GridAgentInterface(GridAgent):
             prestige_scale = self.prestige_scale,
             allow_negative_prestige = self.allow_negative_prestige,
             spawn_delay = self.spawn_delay,
+            view_type = self.view_type,
+            move_type = self.move_type,
             **self.init_kwargs
         )
         return ret
@@ -203,11 +205,48 @@ class GridAgentInterface(GridAgent):
         return np.array((-dy, dx))
 
     @property
+    def left_vec(self):
+        """
+        Get the vector pointing to the right of the agent.
+        """
+        dx, dy = self.dir_vec
+        return np.array((dy, dx))
+
+    @property
+    def back_vec(self):
+        """
+        Get the vector pointing to the right of the agent.
+        """
+        dx, dy = self.dir_vec
+        return np.array((-dx, -dy))
+
+    @property
     def front_pos(self):
         """
         Get the position of the cell that is right in front of the agent
         """
         return np.add(self.pos, self.dir_vec)
+
+    @property
+    def right_pos(self):
+        """
+        Get the position of the cell that is right in front of the agent
+        """
+        return np.add(self.pos, self.right_vec)
+
+    @property
+    def left_pos(self):
+        """
+        Get the position of the cell that is right in front of the agent
+        """
+        return np.add(self.pos, self.left_vec)
+
+    @property
+    def back_pos(self):
+        """
+        Get the position of the cell that is right in front of the agent
+        """
+        return np.add(self.pos, self.back_vec)
 
     def get_view_coords(self, i, j):
         """
