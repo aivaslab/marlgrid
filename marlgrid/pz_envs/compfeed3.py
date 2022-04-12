@@ -175,6 +175,7 @@ class para_Mindreading2(para_MultiGridEnv):
         if swapType == "replace" and boxes <=2:
             swapType = "swap"
         
+        self.box_reward = 1
         self.food_locs = list(range(boxes))
         random.shuffle(self.food_locs)
         self.release1 = []
@@ -331,7 +332,7 @@ class para_Mindreading2(para_MultiGridEnv):
             	            b1.get_reward = c.get_reward
                         else:
                             b1.can_overlap = lambda : True
-                            b1.get_reward = lambda x: 0
+                            b1.get_reward = lambda x: self.box_reward
                             #todo: why does one of these have arg? overlap is property?
                         self.put_obj(b1, x, y)
                         
