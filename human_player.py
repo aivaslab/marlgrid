@@ -37,7 +37,7 @@ class HumanPlayer:
 
 
 env_config =  {
-    "env_class": "para_Mindreading2",
+    "env_class": "para_TutorialEnv",
     "max_steps": 50,
     "respawn": True,
     "ghost_mode": True,
@@ -48,14 +48,14 @@ env_config =  {
 
 
 player_interface_config = {
-    "view_size": 19,
+    "view_size": 9,
     "view_offset": 3,
-    "view_tile_size": 48,
+    "view_tile_size": 32,
     "observation_style": "image",
     "see_through_walls": False,
     "color": "yellow",
     "view_type": 0,
-    "move_type": 1
+    "move_type": 0
 }
 puppet_interface_config = {
     "view_size": 19,
@@ -72,7 +72,7 @@ puppet_interface_config = {
 
 env_config['agents'] = [GridAgentInterface(**player_interface_config)]
 
-env_config['puppets'] = [GridAgentInterface(**puppet_interface_config)]
+#env_config['puppets'] = [GridAgentInterface(**puppet_interface_config)]
 
 env = env_from_config(env_config)
 
@@ -82,15 +82,17 @@ human.start_episode()
 done = False
 
 for i in range(5):
-    config = random.choice(list(scenario_configs.keys()))
-    print(config, scenario_configs[config])
-    env.hard_reset(scenario_configs[config])
-    print(env.params)
+    if hasattr(env, "hard_reset"):
+        config = random.choice(list(scenario_configs.keys()))
+        print(config, scenario_configs[config])
+        env.hard_reset(scenario_configs[config])
+        print(env.params)
+    env.params = {}
+    env.variants = ['1g']
     obs = env.reset()
+    print(env)
     while True:
-
         #env.unwrapped.render() # OPTIONAL: render the whole scene + birds eye view
-
         player_action = human.action_step(obs['player_0'])
 
         agent_actions = {'player_0': player_action}
