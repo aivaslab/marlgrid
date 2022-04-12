@@ -210,7 +210,7 @@ class GridAgentInterface(GridAgent):
         Get the vector pointing to the right of the agent.
         """
         dx, dy = self.dir_vec
-        return np.array((dy, dx))
+        return np.array((dy, -dx))
 
     @property
     def back_vec(self):

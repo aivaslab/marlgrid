@@ -574,12 +574,15 @@ class para_MultiGridEnv(ParallelEnv):
             self.grid = random.choice(self.allRooms)
         else:
             flag = 0
+            print('pregeneration')
             while flag < 1000:
                 try:
                     self._gen_grid(self.width, self.height, **self.params)
                     flag = 1000
-                except:
+                except Exception as e:
                     flag = flag+1
+                    if flag == 1000:
+                        print(e)
                     pass
 
         for k, agent in enumerate(self.agent_instances.union(self.puppet_instances)):
@@ -694,7 +697,7 @@ class para_MultiGridEnv(ParallelEnv):
                         fwd_pos = agent.back_pos[:]
                     fwd_cell = self.grid.get(*fwd_pos)
 
-                if action == agent.actions.forward or agent.move_type == 1:
+                if action == agent.actions.forward or (agent.move_type == 1 and (action in [agent.actions.left, agent.actions.right, agent.actions.done])):
                     # Under the follow conditions, the agent can move forward.
                     can_move = fwd_cell is None or fwd_cell.can_overlap()
                     if self.ghost_mode is False and isinstance(fwd_cell, GridAgent):
