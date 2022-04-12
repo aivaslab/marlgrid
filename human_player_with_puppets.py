@@ -49,15 +49,24 @@ env_config =  {
 
 player_interface_config = {
     "view_size": 19,
-    "view_offset": 3,
-    "view_tile_size": 16,
+    "view_offset": 4,
+    "view_tile_size": 32,
     "observation_style": "rich",
     "see_through_walls": False,
-    "color": "prestige"
+    "color": "yellow",
+    "view_type": 1
+}
+puppet_interface_config = {
+    "view_size": 19,
+    "view_offset": 4,
+    "view_tile_size": 32,
+    "observation_style": "rich",
+    "see_through_walls": False,
+    "color": "red",
+    "view_type": 1
 }
 
-
-env_config['agents'] = [GridAgentInterface(**player_interface_config), GridAgentInterface(**player_interface_config)]
+env_config['agents'] = [GridAgentInterface(**player_interface_config)]
 
 env = env_from_config(env_config)
 
@@ -68,8 +77,7 @@ done = False
 
 for i in range(5):
     config = random.choice(list(scenario_configs.keys()))
-    config = "partially uninformed"
-    print(config)
+    print(config, scenario_configs[config])
     env.hard_reset(scenario_configs[config])
     print(env.params)
     obs = env.reset()

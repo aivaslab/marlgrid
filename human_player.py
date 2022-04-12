@@ -50,16 +50,29 @@ env_config =  {
 player_interface_config = {
     "view_size": 19,
     "view_offset": 3,
-    "view_tile_size": 16,
-    "observation_style": "rich",
+    "view_tile_size": 48,
+    "observation_style": "image",
     "see_through_walls": False,
-    "color": "prestige"
+    "color": "yellow",
+    "view_type": 0,
+    "move_type": 1
+}
+puppet_interface_config = {
+    "view_size": 19,
+    "view_offset": 3,
+    "view_tile_size": 48,
+    "observation_style": "image",
+    "see_through_walls": True,
+    "color": "red",
+    "move_type": 1,
+    "view_type": 1,
 }
 
+#puppet controls+movetype going to red agent, player view going to yellow?
 
 env_config['agents'] = [GridAgentInterface(**player_interface_config)]
 
-env_config['puppets'] =  [GridAgentInterface(**player_interface_config)]
+env_config['puppets'] = [GridAgentInterface(**puppet_interface_config)]
 
 env = env_from_config(env_config)
 
@@ -70,8 +83,7 @@ done = False
 
 for i in range(5):
     config = random.choice(list(scenario_configs.keys()))
-    config = "partially uninformed"
-    print(config)
+    print(config, scenario_configs[config])
     env.hard_reset(scenario_configs[config])
     print(env.params)
     obs = env.reset()
@@ -79,7 +91,7 @@ for i in range(5):
 
         #env.unwrapped.render() # OPTIONAL: render the whole scene + birds eye view
 
-        player_action = human.action_step(obs['player_0']['pov'])
+        player_action = human.action_step(obs['player_0'])
 
         agent_actions = {'player_0': player_action}
 
