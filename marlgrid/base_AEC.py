@@ -574,15 +574,14 @@ class para_MultiGridEnv(ParallelEnv):
             self.grid = random.choice(self.allRooms)
         else:
             flag = 0
-            print('pregeneration')
-            while flag < 1000:
+            while flag < 100:
                 try:
                     self._gen_grid(self.width, self.height, **self.params)
-                    flag = 1000
+                    flag = 100
                 except Exception as e:
                     flag = flag+1
-                    if flag == 1000:
-                        print(e)
+                    if flag == 100:
+                        print('exception', e)
                     pass
 
         for k, agent in enumerate(self.agent_instances.union(self.puppet_instances)):

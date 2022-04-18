@@ -3,10 +3,8 @@ import marlgrid
 
 from marlgrid.rendering import InteractivePlayerWindow
 from marlgrid.agents import GridAgentInterface
-#from marlgrid.envs import env_from_config
 from marlgrid.pz_envs import *
-
-
+from marlgrid.pz_envs.scenario_configs import ScenarioConfigs, AllParams
 
 
 class HumanPlayer:
@@ -46,7 +44,6 @@ env_config =  {
     "height": 9
 }
 
-
 player_interface_config = {
     "view_size": 9,
     "view_offset": 3,
@@ -67,6 +64,7 @@ puppet_interface_config = {
     "move_type": 1,
     "view_type": 1,
 }
+configs = ScenarioConfigs().tutorial
 
 #puppet controls+movetype going to red agent, player view going to yellow?
 
@@ -83,12 +81,8 @@ done = False
 
 for i in range(5):
     if hasattr(env, "hard_reset"):
-        config = random.choice(list(scenario_configs.keys()))
-        print(config, scenario_configs[config])
-        env.hard_reset(scenario_configs[config])
-        print(env.params)
-    env.params = {}
-    env.variants = ['1g']
+        configName = random.choice(list(configs.keys()))
+        env.hard_reset(configs[configName])
     obs = env.reset()
     print(env)
     while True:

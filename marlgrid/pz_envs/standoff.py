@@ -7,110 +7,12 @@ from ..puppets import astar, pathfind
 import copy
 
 
-scenario_configs = {
-    "tutorial_step_1": {
-        "puppets": 0,
-        "boxes": [5],
-        "baitSize": [1,2],
-        "followDistance": [0,1],
-        "visibility": ['full', 'curtains'],
-        "informed": "informed",
-        "hidden": [False, True]
-    },
-    "tutorial_step_2": {
-        #more varied training, including easier cases than eval
-        "puppets": 1,
-        "boxes": [5],
-        "baitSize": [2],
-        "followDistance": [0,1],
-        "visibility": ['curtains'],
-        "informed": "informed",
-        "hidden": [False, True]
-    },
-    "tutorial_step_2_eval": {
-        #single test config that must be passed
-        "puppets": 1,
-        "boxes": [5],
-        "baitSize": [2],
-        "visibility": 'curtains',
-        "informed": "informed",
-        "hidden": True
-    },
-    "informed control": {
-        "informed": 'informed',
-    },
-    "partially uninformed": {
-        "informed": ['half1', 'half2'],
-        "firstBig": [True, False],
-        "baitSize": 1,
-        "baits": 2,
-    },    
-    "removed informed": {
-        "informed": "informed",
-        "swapType": 'remove',
-        "baitSize": 2,
-        "baits": 3,
-    },
-    "removed uninformed": {
-        "informed": "uninformed",
-        "swapType": 'remove',
-        "baitSize": 2,
-        "baits": 2,
-    },
-    "moved": {
-        "informed": "informed", #but uninformed about first baiting
-        "swapType": 'move',
-        "baitSize": 2,
-        "baits": 2,
-    },
-    "replaced": {
-        "informed": "uninformed",
-        "swapType": 'replace',
-        "baitSize": 1,
-        "baits": 3,
-    },
-    "misinformed": {
-        "informed": "uninformed",
-        "swapType": ['swap', 'replace'], #any bucket swapped with a food
-        "baitSize": 2,
-        "baits": 2,
-    },
-    "swapped": {
-        "informed": "uninformed",
-        "swapType": 'swap',
-        "baitSize": 2,
-        "baits": 2,
-    }
+class para_standoffEnv(para_MultiGridEnv):
 
-}
-
-class para_Mindreading2(para_MultiGridEnv):
-    #single-agent version of compfeed,
-
-    mission = "get to the goal"
-    metadata = {'render_modes': ['human', 'rgb_array'], "name": "mindreadingEnv"}
-    #variants = []
+    mission = "get the best food before your opponent"
+    metadata = {'render_modes': ['human', 'rgb_array'], "name": "standoffEnv"}
 
     def hard_reset(self, params=None):
-        
-        allOfThem = {
-                "adversarial": [True, False],
-                "hidden": [True, False],
-                "rational": [True, False],
-                "sharedRewards": [True, False],
-                "firstBig": [True, False],#whether we place big first
-                "boxes": [2],#[2,3,4,5],
-                "puppets": [0,1,2],
-                "followDistance": [0,1], #0 = d first, 1=sub first
-                "lavaHeight": [2],
-                "baits": [1,2],
-                "baitSize": [1,2],
-                "informed": ['informed', 'uninformed', 'fake', 'half1', 'half2'],
-                "swapType": ['swap', 'replace', 'remove', 'move', 'mis'],
-                "visibility": ['full', 'curtains'], #keys, invisibility potion
-                "cause": ['blocks', 'direction', 'accident', 'inability'],
-                "lava": ['lava', 'block'],
-                }
         defaults = {
                 "adversarial": [True],
                 "hidden": [True],
@@ -233,11 +135,9 @@ class para_Mindreading2(para_MultiGridEnv):
                 y = j+startRoom+atrium+1
                 self.put_obj(GlassBlock(color="blue", init_state=1), x, y)
 
-
         self.agent_goal, self.last_seen_reward, self.can_see, self.best_reward = {}, {}, {}, {}
         self.reset_vision()
         # init timers
-        
 
         self.timers = {}
         curTime = 1
@@ -249,7 +149,6 @@ class para_Mindreading2(para_MultiGridEnv):
                 informed2 = "informed" if bait == 0 else "uninformed"
             elif informed == "half2":
                 informed2 = "informed" if bait == 1 else "uninformed"
-                
                 
             if informed2 == "informed":
                 #no hiding
