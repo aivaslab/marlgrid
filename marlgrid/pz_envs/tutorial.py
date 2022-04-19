@@ -4,7 +4,7 @@ from random import randrange
 import random
 import math
 import copy
-from scenario_configs import ScenarioConfigs
+from marlgrid.marlgrid.pz_envs.scenario_configs import ScenarioConfigs
 
 class para_TutorialEnv(para_MultiGridEnv):
     """
