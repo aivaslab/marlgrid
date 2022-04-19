@@ -4,6 +4,7 @@ from random import randrange
 import random
 import math
 import copy
+from scenario_configs import ScenarioConfigs
 
 class para_TutorialEnv(para_MultiGridEnv):
     """
@@ -22,6 +23,7 @@ class para_TutorialEnv(para_MultiGridEnv):
     path = ''
     allParams = {"type": ["t","n"], "var": ["a","b","c","d","e","f","g"], "puppets": [0]}
     params = {}
+    configs = ScenarioConfigs.tutorial
 
     def hard_reset(self, params=None):
         self.params = params
