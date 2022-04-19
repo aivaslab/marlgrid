@@ -416,6 +416,9 @@ class para_MultiGridEnv(ParallelEnv):
             width, height = grid_size, grid_size
 
         self.respawn = respawn
+        
+        self.memory = memory
+        self.colorMemory = colorMemory
 
         self.window = None
 
@@ -482,7 +485,7 @@ class para_MultiGridEnv(ParallelEnv):
         return Box(
             low=0,
             high=255,
-            shape=(self.agent_view_size, self.agent_view_size, 3),
+            shape=(self.agent_view_size, self.agent_view_size, (1+2*self.colorMemory)*self.memory),
             dtype='uint8'
             )
         #return self.observation_spaces[agent]
