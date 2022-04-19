@@ -12,7 +12,7 @@ class para_standoffEnv(para_MultiGridEnv):
 
     mission = "get the best food before your opponent"
     metadata = {'render_modes': ['human', 'rgb_array'], "name": "standoffEnv"}
-    config = ScenarioConfigs.standoff
+    configs = ScenarioConfigs.standoff
 
     def hard_reset(self, params=None):
         defaults = {
