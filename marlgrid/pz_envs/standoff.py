@@ -5,7 +5,7 @@ import random
 import math
 from ..puppets import astar, pathfind
 import copy
-from scenario_configs import ScenarioConfigs
+from marlgrid.marlgrid.pz_envs.scenario_configs import ScenarioConfigs
 
 
 class para_standoffEnv(para_MultiGridEnv):
