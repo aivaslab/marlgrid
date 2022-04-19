@@ -21,7 +21,7 @@ from pettingzoo import AECEnv, ParallelEnv
 from pettingzoo.utils import agent_selector
 from pettingzoo.utils import wrappers
 
-TILE_PIXELS = 32
+TILE_PIXELS = 16
 NUM_ITERS = 100
 NONE = 4
 
