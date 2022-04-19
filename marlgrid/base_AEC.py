@@ -455,7 +455,7 @@ class para_MultiGridEnv(ParallelEnv):
         self.observation_spaces = {agent: Box(
             low=0,
             high=255,
-            shape=(self.agent_view_size, self.agent_view_size, (1+2*colorMemory)*memory),
+            shape=(memory, self.agent_view_size, self.agent_view_size, 3),
             dtype='uint8'
             ) for agent in self.possible_agents}
 
@@ -485,7 +485,7 @@ class para_MultiGridEnv(ParallelEnv):
         return Box(
             low=0,
             high=255,
-            shape=(self.agent_view_size, self.agent_view_size, (1+2*self.colorMemory)*self.memory),
+            shape=(memory, self.agent_view_size, self.agent_view_size, 3),
             dtype='uint8'
             )
         #return self.observation_spaces[agent]
