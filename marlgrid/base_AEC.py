@@ -392,6 +392,8 @@ class para_MultiGridEnv(ParallelEnv):
         width=11,
         height=11,
         max_steps=100,
+        memory=1,
+        colorMemory=False,
         reward_decay=False,
         seed=1337,
         respawn=False,
@@ -450,7 +452,7 @@ class para_MultiGridEnv(ParallelEnv):
         self.observation_spaces = {agent: Box(
             low=0,
             high=255,
-            shape=(self.agent_view_size, self.agent_view_size, 3),
+            shape=(self.agent_view_size, self.agent_view_size, (1+2*colorMemory)*memory),
             dtype='uint8'
             ) for agent in self.possible_agents}
 
