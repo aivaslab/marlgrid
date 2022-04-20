@@ -455,7 +455,7 @@ class para_MultiGridEnv(ParallelEnv):
         self.observation_spaces = {agent: Box(
             low=0,
             high=255,
-            shape=(memory, self.agent_view_size, self.agent_view_size, 3),
+            shape=(self.agent_view_size, self.agent_view_size, 3),
             dtype='uint8'
             ) for agent in self.possible_agents}
 
@@ -477,18 +477,11 @@ class para_MultiGridEnv(ParallelEnv):
 
     @functools.lru_cache(maxsize=None)
     def action_space(self, agent):
-        return Discrete(7)
-        #return self.action_spaces[agent]
+        return self.action_spaces[agent]
         
     @functools.lru_cache(maxsize=None)
     def observation_space(self, agent):
-        return Box(
-            low=0,
-            high=255,
-            shape=(self.memory, self.agent_view_size, self.agent_view_size, 3),
-            dtype='uint8'
-            )
-        #return self.observation_spaces[agent]
+        return self.observation_spaces[agent]
 
     def seed(self, seed=1337):
         # Seed the random number generator
