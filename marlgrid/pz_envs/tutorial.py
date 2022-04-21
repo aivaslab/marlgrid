@@ -21,7 +21,7 @@ class para_TutorialEnv(para_MultiGridEnv):
     loading_mode = False
     saving_mode = False
     path = ''
-    allParams = {"type": ["t","n"], "var": ["a","b","c","d","e","f","g"], "puppets": [0]}
+    allParams = {"type": ["t","n"], "var": ["a","b","c","d","e","f","g", "h"], "puppets": [0]}
     params = {}
     configs = ScenarioConfigs.tutorial
 
@@ -88,6 +88,8 @@ class para_TutorialEnv(para_MultiGridEnv):
             if eVar in "eg":
                 #preferences
                 self.box_locs.append(self.place_obj(Goal(color="green", reward=50, size=0.5), top=(0, 0), size=(width, height)))
+	    elif eVar in "h":
+	        self.box_locs.append(self.place_obj(Goal(color="green", reward=1, size=0.01), top=(0, 0), size=(width, height)))
             if eVar in "fg":
                 #memory
                 self.timers = {}
