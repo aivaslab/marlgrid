@@ -88,8 +88,8 @@ class para_TutorialEnv(para_MultiGridEnv):
             if eVar in "eg":
                 #preferences
                 self.box_locs.append(self.place_obj(Goal(color="green", reward=50, size=0.5), top=(0, 0), size=(width, height)))
-	    if eVar in "f":
-	        self.box_locs.append(self.place_obj(Goal(color="green", reward=1, size=0.01), top=(0, 0), size=(width, height)))
+            if eVar in "f":
+                self.box_locs.append(self.place_obj(Goal(color="green", reward=1, size=0.01), top=(0, 0), size=(width, height)))
             if eVar in "fg":
                 #memory
                 self.timers = {}
