@@ -9,7 +9,8 @@ import datetime
 
 def make_pic_video(model, env, name, savePics, saveVids, savePath, random_policy=False, video_length=50):
     #stuff provided in video.py... 
-    env = parallel_to_aec(env.unwrapped).unwrapped
+    env = parallel_to_aec(env.unwrapped)
+    print(env.__dict__.keys())
     vidname = name + '-' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 
     for i in range(video_length+1):
