@@ -2,6 +2,7 @@ import os
 from .conversion import make_env
 from .display import make_pic_video, plot_evals
 from stable_baselines3.common.evaluation import evaluate_policy
+from pettingzoo.utils.conversions import aec_to_parallel, parallel_to_aec
 import tqdm
 
 def evaluate_all_levels(model, eval_envs, eval_names, rewards, stds, n_eval_episodes=20, 
