@@ -2,6 +2,44 @@ from pettingzoo.utils.conversions import aec_to_parallel, parallel_to_aec
 import supersuit as ss
 from pettingzoo.utils import wrappers
 
+def make_env(envClass, player_config, configName=None, memory=1, threads=1, reduce_color=False, size=64,
+    reward_decay=False, ghost_mode=True, max_steps=50):
+
+    player_interface_config = player_config
+    agents = [GridAgentInterface(**player_interface_config) for _ in range(1)]
+
+    env_config =  {
+        "env_class": envClass,
+        "max_steps": max_steps,
+        "respawn": True,
+        "ghost_mode": ghost_mode,
+        "reward_decay": reward_decay,
+        "width": 9 if envClass == "para_TutorialEnv" else 19,
+        "height": 9 if envClass == "para_TutorialEnv" else 19,
+        "agents": agents,
+        "memory": memory
+    }
+
+    env = env_from_config(env_config)
+    env.agent_view_size = player_interface_config["view_size"]*player_interface_config["view_tile_size"]
+
+    configName = random.choice(list(env.configs.keys())) if configName == None else configName
+    env.hard_reset(env.configs[configName])
+
+    #train on multiple configs how?
+
+    if reduce_color:
+        env = ss.color_reduction_v0(env, 'B')
+    env = ss.resize_v0(env, x_size=size, y_size=size)
+    if reduce_color:
+        env = ss.reshape_v0(env, (size, size, 1))
+    env = ss.pettingzoo_env_to_vec_env_v1(env)
+    env = ss.concat_vec_envs_v1(env, threads, num_cpus=2, base_class='stable_baselines3')
+    if memory > 1:
+        env = VecFrameStack(env, n_stack=memory)
+    env = VecMonitor(env)
+    return env
+
 def wrap_env(para_env, **kwargs):
     '''
     The env function wraps the environment in 3 wrappers by default. These
