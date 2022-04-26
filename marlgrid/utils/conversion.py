@@ -6,7 +6,7 @@ from marlgrid.marlgrid.pz_envs import env_from_config
 from stable_baselines3.common.vec_env import VecMonitor, VecFrameStack
 
 def make_env(envClass, player_config, configName=None, memory=1, threads=1, reduce_color=False, size=64,
-    reward_decay=False, ghost_mode=True, max_steps=50):
+    reward_decay=False, ghost_mode=True, max_steps=50, saveVids=False, path="", recordEvery=1e4):
 
     player_interface_config = player_config
     agents = [GridAgentInterface(**player_config) for _ in range(1)]
@@ -41,6 +41,8 @@ def make_env(envClass, player_config, configName=None, memory=1, threads=1, redu
     if memory > 1:
         env = VecFrameStack(env, n_stack=memory)
     env = VecMonitor(env)
+    if saveVids:
+        env = VecVideoRecorder(env, path, record_video_trigger=lambda x: x % recordEvery == 0, video_length=50)
     return env
 
 def wrap_env(para_env, **kwargs):

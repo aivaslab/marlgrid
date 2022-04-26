@@ -8,6 +8,7 @@ from pettingzoo.utils.conversions import aec_to_parallel, parallel_to_aec
 import datetime
 
 def make_pic_video(model, env, name, savePics, saveVids, savePath, random_policy=False, video_length=50):
+    pass
     #stuff provided in video.py... 
     print(env.__dict__.keys())
     env = parallel_to_aec(env.unwrapped).unwrapped
