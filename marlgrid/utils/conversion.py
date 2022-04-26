@@ -9,7 +9,7 @@ def make_env(envClass, player_config, configName=None, memory=1, threads=1, redu
     reward_decay=False, ghost_mode=True, max_steps=50):
 
     player_interface_config = player_config
-    agents = [GridAgentInterface(**player_interface_config) for _ in range(1)]
+    agents = [GridAgentInterface(**player_config) for _ in range(1)]
 
     env_config =  {
         "env_class": envClass,
