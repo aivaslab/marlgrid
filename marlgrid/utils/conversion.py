@@ -42,7 +42,7 @@ def make_env(envClass, player_config, configName=None, memory=1, threads=1, redu
         env = VecFrameStack(env, n_stack=memory)
     env = VecMonitor(env)
     if saveVids:
-        env = VecVideoRecorder(env, path, record_video_trigger=lambda x: x % recordEvery == 0, video_length=50)
+        env = VecVideoRecorder(env, path, record_video_trigger=lambda x: x % recordEvery == 0, video_length=50, name_prefix=configName)
     return env
 
 def wrap_env(para_env, **kwargs):
