@@ -1,6 +1,7 @@
 import os
 from .conversion import make_env
 from .display import make_pic_video
+from stable_baselines3.common.evaluation import evaluate_policy
 
 def evaluate_all_levels(model, eval_envs, eval_names, rewards, stds, n_eval_episodes=20, 
                         deterministic=True, saveVids=None, 
