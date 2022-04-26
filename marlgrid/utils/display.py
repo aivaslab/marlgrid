@@ -10,7 +10,7 @@ import datetime
 def make_pic_video(model, env, name, savePics, saveVids, savePath, random_policy=False, video_length=50):
     pass
     #stuff provided in video.py... 
-    print(env.__dict__.keys())
+    '''print(env.__dict__.keys())
     env = parallel_to_aec(env.unwrapped).unwrapped
     print(env.__dict__.keys())
     vidname = name + '-' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
@@ -27,7 +27,7 @@ def make_pic_video(model, env, name, savePics, saveVids, savePath, random_policy
     
     if saveVids:
         clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(ims, 15)
-        clip.write_videofile(os.path.join(savePath , vidname) + '.mp4')
+        clip.write_videofile(os.path.join(savePath , vidname) + '.mp4')'''
 
 def plot_evals(name, stages, rewards, stds, history, savePath):
     fig, axs = plt.subplots(1)
