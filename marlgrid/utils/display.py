@@ -9,6 +9,7 @@ import datetime
 
 def make_pic_video(model, env, name, savePics, saveVids, savePath, random_policy=False, video_length=50):
     #stuff provided in video.py... 
+    print(env.__dict__.keys())
     env = parallel_to_aec(env.unwrapped).unwrapped
     print(env.__dict__.keys())
     vidname = name + '-' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
