@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-%matplotlib inline
+#%matplotlib inline
 from IPython import display
 
 def make_pic_video(model, env, name, savePics, saveVids, savePath):
