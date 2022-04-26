@@ -35,6 +35,8 @@ def train_model(name, train_env, eval_envs, eval_params,
     if saveModel or saveVids or savePics:
         if not os.path.exists(savePath):
             os.mkdir(savePath)
+
+    recordEvery = int(total_timesteps/evals)
     
     train_env = make_env(train_env[0], player_config, train_env[1], memory=memory, threads=threads,
                          reduce_color=reduce_color, size=size)
@@ -43,7 +45,7 @@ def train_model(name, train_env, eval_envs, eval_params,
     model = framework(policy, train_env, learning_rate=learning_rate, 
                       n_steps=batch_size, tensorboard_log="logs")
     eval_envs = [make_env(x, player_config, y, memory=memory, threads=threads, 
-                          reduce_color=reduce_color, size=size, saveVids=saveVids, path=savePath) for x,y in 
+                          reduce_color=reduce_color, size=size, saveVids=saveVids, path=savePath, recordEvery=recordEvery) for x,y in 
                           zip(eval_envs, eval_params)]
     name = str(name+model.policy_class.__name__)
     rewards, stds = {}, {}
@@ -54,7 +56,7 @@ def train_model(name, train_env, eval_envs, eval_params,
 
     histories = []
     for step in tqdm.tqdm(range(evals)):
-        history = model.learn(total_timesteps=int(total_timesteps/evals), 
+        history = model.learn(total_timesteps=recordEvery, 
                               tb_log_name=name, reset_num_timesteps=True)
         histories += [history,]
         evaluate_all_levels(model, eval_envs, eval_params, rewards, stds, 
