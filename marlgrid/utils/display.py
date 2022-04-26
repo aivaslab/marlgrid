@@ -5,7 +5,7 @@ from IPython import display
 def make_pic_video(model, env, name, savePics, saveVids, savePath):
     pass
 
-def plot_evals(name, stages, rewards, stds, savePath):
+def plot_evals(name, stages, rewards, stds, history, savePath):
     fig, axs = plt.subplots(1)
     xaxis = range(len(rewards[stages[0]]))
 
