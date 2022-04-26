@@ -63,7 +63,7 @@ def train_model(name, train_env, eval_envs, eval_params,
                             saveVids=saveVids, savePics=savePics, 
                             savePath=savePath, name=name)
         if saveEval or saveTrain:
-            plot_evals("name_eval_"+str(step), eval_params, rewards, stds, history, 
+            plot_evals("name_eval", eval_params, rewards, stds, history, 
                        savePath=savePath)
 
     if saveModel:
