@@ -1,5 +1,5 @@
 import os
-from utils.conversion import make_env
+from ..conversion import make_env
 
 def evaluate_all_levels(model, eval_envs, eval_names, rewards, stds, n_eval_episodes=20, 
                         deterministic=True, saveVids=None, 
