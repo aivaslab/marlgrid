@@ -39,10 +39,9 @@ def train_model(name, train_env, eval_envs, eval_params,
     train_env = make_env(train_env[0], player_config, train_env[1], memory=memory, threads=threads,
                          reduce_color=reduce_color, size=size)
 
-    logdir = str(name) + str(framework)
     #model = framework(policy, train_env, learning_rate=learning_rate, n_steps=batch_size, tensorboard_log=logdir, use_rms_prop=True)
     model = framework(policy, train_env, learning_rate=learning_rate, 
-                      n_steps=batch_size, tensorboard_log=logdir)
+                      n_steps=batch_size, tensorboard_log="logs")
     eval_envs = [make_env(x, player_config, y, memory=memory, threads=threads, 
                           reduce_color=reduce_color, size=size) for x,y in 
                           zip(eval_envs, eval_params)]
