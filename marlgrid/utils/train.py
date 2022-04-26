@@ -1,5 +1,5 @@
 import os
-from conversion import make_env
+from utils.conversion import make_env
 
 def evaluate_all_levels(model, eval_envs, eval_names, rewards, stds, n_eval_episodes=20, 
                         deterministic=True, saveVids=None, 
@@ -30,7 +30,8 @@ def train_model(name, train_env, eval_envs, eval_params,
                 savePath="drive/MyDrive/model/"):
     
     if saveModel or saveVids or savePics:
-        assert os.path.exists(savePath)
+        if not os.path.exists(savePath):
+            os.mkdir(savePath)
     
     train_env = make_env(train_env[0], player_config, train_env[1], memory=memory, threads=threads,
                          reduce_color=reduce_color, size=size)
