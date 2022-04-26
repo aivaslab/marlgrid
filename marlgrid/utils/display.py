@@ -4,9 +4,11 @@ from IPython import display
 import inspect
 import os
 import moviepy.video.io.ImageSequenceClip
+from pettingzoo.utils.conversions import aec_to_parallel, parallel_to_aec
 import datetime
 
 def make_pic_video(model, env, name, savePics, saveVids, savePath, random_policy=False, video_length=50):
+    #stuff provided in video.py... 
     env = parallel_to_aec(env.unwrapped).unwrapped
     vidname = name + '-' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 
