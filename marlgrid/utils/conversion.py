@@ -2,6 +2,7 @@ from pettingzoo.utils.conversions import aec_to_parallel, parallel_to_aec
 import supersuit as ss
 from pettingzoo.utils import wrappers
 from ..agents import GridAgentInterface
+from marlgrid.marlgrid.pz_envs import env_from_config
 
 def make_env(envClass, player_config, configName=None, memory=1, threads=1, reduce_color=False, size=64,
     reward_decay=False, ghost_mode=True, max_steps=50):
