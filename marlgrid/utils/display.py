@@ -1,9 +1,28 @@
 import matplotlib.pyplot as plt
 #%matplotlib inline
 from IPython import display
+import inspect
+import os
+import moviepy.video.io.ImageSequenceClip
+import datetime
 
-def make_pic_video(model, env, name, savePics, saveVids, savePath):
-    pass
+def make_pic_video(model, env, name, savePics, saveVids, savePath, random_policy=False, video_length=50):
+    env = parallel_to_aec(env.unwrapped).unwrapped
+    vidname = name + '-' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+
+    for i in range(video_length+1):
+        if random_policy:
+            actions = { a: env.action_spaces[a].sample() for k, a in enumerate(env.possible_agents) }
+        else:
+            actions = {x: model.predict(obs[x])[0] for x in env.possible_agents}
+        obs, rew, dones, _, = env.step(actions)
+        ims += [env.render(),]
+        if dones['player_0']:
+            break
+    
+    if saveVids:
+        clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(ims, 15)
+        clip.write_videofile(os.path.join(savePath , vidname) + '.mp4')
 
 def plot_evals(name, stages, rewards, stds, history, savePath):
     fig, axs = plt.subplots(1)
