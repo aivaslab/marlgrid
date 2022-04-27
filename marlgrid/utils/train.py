@@ -30,7 +30,7 @@ def train_model(name, train_env, eval_envs, eval_params,
                 batch_size=32, memory=1, size=64, reduce_color=False,
                 threads=1, saveModel=False, saveVids=True, savePics=True, 
                 saveEval=True, saveTrain=True,
-                savePath="drive/MyDrive/model/"):
+                savePath="drive/MyDrive/model/", reward_decay=True):
 
     
     if saveModel or saveVids or savePics:
@@ -41,13 +41,14 @@ def train_model(name, train_env, eval_envs, eval_params,
     recordEvery = int(total_timesteps/evals)
     
     train_env = make_env(train_env[0], player_config, train_env[1], memory=memory, threads=threads,
-                         reduce_color=reduce_color, size=size)
+                         reduce_color=reduce_color, size=size, reward_decay=reward_decay)
 
     #model = framework(policy, train_env, learning_rate=learning_rate, n_steps=batch_size, tensorboard_log=logdir, use_rms_prop=True)
     model = framework(policy, train_env, learning_rate=learning_rate, 
                       n_steps=batch_size, tensorboard_log="logs")
     eval_envs = [make_env(x, player_config, y, memory=memory, threads=threads, 
-                          reduce_color=reduce_color, size=size, saveVids=saveVids, path=savePath, recordEvery=recordEvery) for x,y in 
+                          reduce_color=reduce_color, size=size, saveVids=saveVids, path=savePath, 
+                          recordEvery=recordEvery, reward_decay=reward_decay) for x,y in 
                           zip(eval_envs, eval_params)]
     name = str(name+model.policy_class.__name__)
     rewards, stds = {}, {}

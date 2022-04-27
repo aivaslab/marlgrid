@@ -43,7 +43,7 @@ def plot_evals(name, stages, rewards, stds, history, savePath):
     plt.legend(bbox_to_anchor=(1,1), loc="upper left")
     plt.title(name)
     #plt.show()
-    plt.savefig(savePath+name, bbox_inches='tight')
+    plt.savefig(os.path.join(savePath, name), bbox_inches='tight')
 
 def show_state(env, step=0, info=""):
     plt.figure(3)
