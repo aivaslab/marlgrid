@@ -41,9 +41,9 @@ def make_env(envClass, player_config, configName=None, memory=1, threads=1, redu
     if memory > 1:
         env = VecFrameStack(env, n_stack=memory)
         #consider StackedObservations
-    env = VecMonitor(env)
     if saveVids:
         env = VecVideoRecorder(env, path, record_video_trigger=lambda x: x % recordEvery == 0, video_length=50, name_prefix=configName)
+    env = VecMonitor(env)
     return env
 
 def wrap_env(para_env, **kwargs):
