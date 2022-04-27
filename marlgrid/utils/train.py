@@ -1,6 +1,6 @@
 import os
 from .conversion import make_env
-from .display import make_pic_video, plot_evals
+from .display import make_pic_video, plot_evals, plot_train
 from stable_baselines3.common.evaluation import evaluate_policy
 import tqdm
 
@@ -31,8 +31,10 @@ def train_model(name, train_env, eval_envs, eval_params,
                 threads=1, saveModel=False, saveVids=True, savePics=True, 
                 saveEval=True, saveTrain=True,
                 savePath="drive/MyDrive/model/"):
+
     
     if saveModel or saveVids or savePics:
+        savePath = os.path.join(savePath, name)
         if not os.path.exists(savePath):
             os.mkdir(savePath)
 
@@ -63,9 +65,11 @@ def train_model(name, train_env, eval_envs, eval_params,
                             n_eval_episodes=eval_eps, deterministic=True, 
                             saveVids=saveVids, savePics=savePics, 
                             savePath=savePath, name=name)
-        if saveEval or saveTrain:
-            plot_evals("name_eval", eval_params, rewards, stds, history, 
+        if saveEval:
+            plot_evals(name+"_eval", eval_params, rewards, stds, history, 
                        savePath=savePath)
+        if saveTrain:
+            plot_train(name+"_train", history, savePath=savePath)
 
     if saveModel:
         model.save(os.path.join(savePath, name))

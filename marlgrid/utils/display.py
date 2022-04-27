@@ -29,6 +29,10 @@ def make_pic_video(model, env, name, savePics, saveVids, savePath, random_policy
         clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(ims, 15)
         clip.write_videofile(os.path.join(savePath , vidname) + '.mp4')'''
 
+def plot_train(name, history, savePath):
+    print('plotting train')
+    pass
+
 def plot_evals(name, stages, rewards, stds, history, savePath):
     fig, axs = plt.subplots(1)
     xaxis = range(len(rewards[stages[0]]))
