@@ -30,7 +30,8 @@ def train_model(name, train_env, eval_envs, eval_params,
                 batch_size=32, memory=1, size=64, reduce_color=False,
                 threads=1, saveModel=False, saveVids=True, savePics=True, 
                 saveEval=True, saveTrain=True,
-                savePath="drive/MyDrive/model/", reward_decay=True):
+                savePath="drive/MyDrive/model/", reward_decay=True,
+                extractor_features=32):
 
     
     if saveModel or saveVids or savePics:
@@ -43,6 +44,9 @@ def train_model(name, train_env, eval_envs, eval_params,
     train_env = make_env(train_env[0], player_config, train_env[1], memory=memory, threads=threads,
                          reduce_color=reduce_color, size=size, reward_decay=reward_decay)
 
+    policy_kwargs = dict(
+        features_extractor_kwargs=dict(features_dim=extractor_features),
+        )
     #model = framework(policy, train_env, learning_rate=learning_rate, n_steps=batch_size, tensorboard_log=logdir, use_rms_prop=True)
     model = framework(policy, train_env, learning_rate=learning_rate, 
                       n_steps=batch_size, tensorboard_log="logs")
@@ -51,11 +55,13 @@ def train_model(name, train_env, eval_envs, eval_params,
                           recordEvery=recordEvery, reward_decay=reward_decay) for x,y in 
                           zip(eval_envs, eval_params)]
     name = str(name+model.policy_class.__name__)
+
     rewards, stds = {}, {}
-    evaluate_all_levels(model, eval_envs, eval_params, rewards, stds, 
-                        n_eval_episodes=eval_eps, deterministic=True,
-                        saveVids=saveVids, savePics=savePics, savePath=savePath,
-                        name=name)
+    if evals > 0:
+        evaluate_all_levels(model, eval_envs, eval_params, rewards, stds, 
+                            n_eval_episodes=eval_eps, deterministic=True,
+                            saveVids=saveVids, savePics=savePics, savePath=savePath,
+                            name=name)
 
     histories = []
     for step in tqdm.tqdm(range(evals)):
