@@ -49,7 +49,7 @@ def train_model(name, train_env, eval_envs, eval_params,
         )
     #model = framework(policy, train_env, learning_rate=learning_rate, n_steps=batch_size, tensorboard_log=logdir, use_rms_prop=True)
     model = framework(policy, train_env, learning_rate=learning_rate, 
-                      n_steps=batch_size, tensorboard_log="logs")
+                      n_steps=batch_size, tensorboard_log="logs", policy_kwargs=policy_kwargs)
     eval_envs = [make_env(x, player_config, y, memory=memory, threads=threads, 
                           reduce_color=reduce_color, size=size, saveVids=saveVids, path=savePath, 
                           recordEvery=recordEvery, reward_decay=reward_decay) for x,y in 
