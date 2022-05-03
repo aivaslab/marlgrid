@@ -64,12 +64,12 @@ def train_model(name, train_env, eval_envs, eval_params,
                             saveVids=saveVids, savePics=savePics, savePath=savePath,
                             name=name)
 
-    histories = []
+    #histories = []
     
     for step in tqdm.tqdm(range(evals)):
         history = model.learn(total_timesteps=recordEvery, 
                               tb_log_name=name, reset_num_timesteps=True)
-        histories += [history,]
+        #histories += [history,]
         evaluate_all_levels(model, eval_envs, eval_params, rewards, stds, 
                             n_eval_episodes=eval_eps, deterministic=True, 
                             saveVids=saveVids, savePics=savePics, 
@@ -92,4 +92,4 @@ def train_model(name, train_env, eval_envs, eval_params,
 
     if saveModel:
         model.save(os.path.join(savePath, name))
-    return rewards, stds, histories
+    return rewards, stds, history
