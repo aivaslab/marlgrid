@@ -43,7 +43,8 @@ def train_model(name, train_env, eval_envs, eval_params,
     recordEvery = int(total_timesteps/evals) if evals > 0 else 1000
     
     train_env = make_env(train_env[0], player_config, train_env[1], memory=memory, threads=threads,
-                         reduce_color=reduce_color, size=size, reward_decay=reward_decay)
+                         reduce_color=reduce_color, size=size, reward_decay=reward_decay,
+                         path=savePath)
 
     policy_kwargs = dict(
         features_extractor_kwargs=dict(features_dim=extractor_features),
