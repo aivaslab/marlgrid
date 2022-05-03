@@ -39,7 +39,7 @@ def make_env(envClass, player_config, configName=None, memory=1, threads=1, redu
         env = ss.reshape_v0(env, (size, size, 1))
     env = ss.pettingzoo_env_to_vec_env_v1(env)
     env = ss.concat_vec_envs_v1(env, threads, num_cpus=2, base_class='stable_baselines3')
-    #env = VecTransposeImage(env)
+    env = VecTransposeImage(env)
     if memory > 1:
         env = VecFrameStack(env, n_stack=memory)
         #consider StackedObservations
