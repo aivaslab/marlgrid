@@ -135,7 +135,7 @@ class para_standoffEnv(para_MultiGridEnv):
             for j in range(lavaHeight):
                 x = box*2+1
                 y = j+startRoom+atrium+1
-                self.put_obj(GlassBlock(color="blue", init_state=1), x, y)
+                self.put_obj(GlassBlock(color="cyan", init_state=1), x, y)
 
         self.agent_goal, self.last_seen_reward, self.can_see, self.best_reward = {}, {}, {}, {}
         self.reset_vision()
