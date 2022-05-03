@@ -6,6 +6,39 @@ import os
 import moviepy.video.io.ImageSequenceClip
 from pettingzoo.utils.conversions import aec_to_parallel, parallel_to_aec
 import datetime
+from stable_baselines3.common.results_plotter import load_results, ts2xy
+
+def moving_average(values, window):
+    """
+    Smooth values by doing a moving average
+    :param values: (numpy array)
+    :param window: (int)
+    :return: (numpy array)
+    """
+    weights = np.repeat(1.0, window) / window
+    return np.convolve(values, weights, 'valid')
+
+
+def plot_results(log_folder, title='Learning Curve', window=50, savePath=""):
+    """
+    plot the results
+
+    :param log_folder: (str) the save location of the results to plot
+    :param title: (str) the title of the task to plot
+    """
+    x, y = ts2xy(load_results(log_folder), 'timesteps')
+    y = moving_average(y, window=window)
+    # Truncate x
+    x = x[len(x) - len(y):]
+
+    fig = plt.figure(title)
+    plt.plot(x, y)
+    plt.xlabel('Number of Timesteps')
+    plt.ylabel('Rewards')
+    plt.title(title + " Smoothed")
+
+    plt.savefig(os.path.join(savePath, title + str(len(x))), bbox_inches='tight')
+    #plt.show()
 
 def make_pic_video(model, env, name, savePics, saveVids, savePath, random_policy=False, video_length=50):
     pass
@@ -54,3 +87,4 @@ def show_state(env, step=0, info=""):
 
     display.clear_output(wait=True)
     display.display(plt.gcf())
+
