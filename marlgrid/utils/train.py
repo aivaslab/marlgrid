@@ -63,7 +63,7 @@ def train_model(name, train_env, eval_envs, eval_params,
         evaluate_all_levels(model, eval_envs, eval_params, rewards, stds, 
                             n_eval_episodes=eval_eps, deterministic=True,
                             saveVids=saveVids, savePics=savePics, savePath=savePath,
-                            name=name, saveEvery=recordEvery) 
+                            name=name) 
 
     #histories = []
     
@@ -77,7 +77,7 @@ def train_model(name, train_env, eval_envs, eval_params,
                             savePath=savePath, name=name)
         if saveEval:
             plot_evals(name+"_eval", eval_params, rewards, stds, history, 
-                       savePath=savePath)
+                       savePath=savePath, saveEvery=recordEvery)
         if saveTrain:
             plot_train(savePath, name+"_train")
 
