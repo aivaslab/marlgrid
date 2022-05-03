@@ -63,7 +63,7 @@ def train_model(name, train_env, eval_envs, eval_params,
         evaluate_all_levels(model, eval_envs, eval_params, rewards, stds, 
                             n_eval_episodes=eval_eps, deterministic=True,
                             saveVids=saveVids, savePics=savePics, savePath=savePath,
-                            name=name)
+                            name=name, saveEvery=recordEvery) 
 
     #histories = []
     
