@@ -46,7 +46,7 @@ def make_env(envClass, player_config, configName=None, memory=1, threads=1, redu
     if saveVids:
         env = VecVideoRecorder(env, path, record_video_trigger=lambda x: x % recordEvery == 0, video_length=50, name_prefix=configName)
     if path != "":
-        env = VecMonitor(env, filename=os.path.join(path, "train"))
+        env = VecMonitor(env, filename=os.path.join(path, "timesteps"))
     else:
         env = VecMonitor(env)
     return env
