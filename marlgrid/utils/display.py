@@ -26,7 +26,7 @@ def plot_train(log_folder, title='Learning Curve', window=50):
     :param log_folder: (str) the save location of the results to plot
     :param title: (str) the title of the task to plot
     """
-    x, y = ts2xy(load_results(log_folder), 'train')
+    x, y = ts2xy(load_results(log_folder), 'timesteps')
     y = moving_average(y, window=window)
     # Truncate x
     x = x[len(x) - len(y):]
