@@ -64,7 +64,7 @@ def make_pic_video(model, env, name, savePics, saveVids, savePath, random_policy
 
 def plot_evals(name, stages, rewards, stds, history, savePath, saveEvery=1):
     fig, axs = plt.subplots(1)
-    xaxis = range(len(rewards[stages[0]]))*saveEvery
+    xaxis = range(0,len(rewards[stages[0]])*saveEvery,saveEvery)
 
     for i, stage in enumerate(stages):
 
