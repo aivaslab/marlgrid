@@ -79,7 +79,7 @@ def train_model(name, train_env, eval_envs, eval_params,
             plot_evals(name+"_eval", eval_params, rewards, stds, history, 
                        savePath=savePath)
         if saveTrain:
-            plot_train(name+"_train", history, savePath=savePath)
+            plot_train(savePath, name+"_train")
 
     #todo: switch eval/etc to callbacks
     '''callbacks = [EvalCallback(eval_env, best_model_save_path='./logs/',
