@@ -63,7 +63,6 @@ class ScenarioConfigs():
             "informed": "informed",
             "hidden": [False, True]
         },
-        {
         "tutorial_step_1a": {
             "puppets": 0,
             "boxes": [5],
@@ -73,7 +72,6 @@ class ScenarioConfigs():
             "informed": "informed",
             "hidden": [False]
         },
-        {
         "tutorial_step_1b": {
             "puppets": 0,
             "boxes": [5],
