@@ -63,6 +63,26 @@ class ScenarioConfigs():
             "informed": "informed",
             "hidden": [False, True]
         },
+        {
+        "tutorial_step_1a": {
+            "puppets": 0,
+            "boxes": [5],
+            "baitSize": [1,2],
+            "followDistance": [0,1],
+            "visibility": ['full'],
+            "informed": "informed",
+            "hidden": [False]
+        },
+        {
+        "tutorial_step_1b": {
+            "puppets": 0,
+            "boxes": [5],
+            "baitSize": [1,2],
+            "followDistance": [0,1],
+            "visibility": ['full'],
+            "informed": "informed",
+            "hidden": [True]
+        },
         "tutorial_step_2": {
             #more eVaried training, including easier cases than eval
             "puppets": 1,
