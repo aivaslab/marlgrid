@@ -33,8 +33,8 @@ def plot_train(log_folder, title='Learning Curve', window=50):
 
     fig = plt.figure(title)
     plt.plot(x, y)
-    plt.xlabel('Number of Timesteps')
-    plt.ylabel('Rewards')
+    plt.xlabel('Timestep')
+    plt.ylabel('Reward')
     plt.title(title + " Smoothed")
 
     plt.savefig(os.path.join(log_folder, title + str(len(x))), bbox_inches='tight')
@@ -71,6 +71,8 @@ def plot_evals(name, stages, rewards, stds, history, savePath, saveEvery=1):
         plt.plot(xaxis, rewards[stage], label=stage, )
     plt.legend(bbox_to_anchor=(1,1), loc="upper left")
     plt.title(name)
+    plt.xlabel('Timestep')
+    plt.ylabel('Reward')
     #plt.show()
     plt.savefig(os.path.join(savePath, name), bbox_inches='tight')
 
