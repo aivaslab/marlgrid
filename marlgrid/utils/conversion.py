@@ -4,6 +4,7 @@ from pettingzoo.utils import wrappers
 from ..agents import GridAgentInterface
 from marlgrid.marlgrid.pz_envs import env_from_config
 from stable_baselines3.common.vec_env import VecMonitor, VecFrameStack, VecVideoRecorder
+import os
 
 def make_env(envClass, player_config, configName=None, memory=1, threads=1, reduce_color=False, size=64,
     reward_decay=False, ghost_mode=True, max_steps=50, saveVids=False, path="", recordEvery=1e4):
