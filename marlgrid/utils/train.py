@@ -2,6 +2,7 @@ import os
 from .conversion import make_env
 from .display import make_pic_video, plot_evals, plot_train
 from stable_baselines3.common.evaluation import evaluate_policy
+#from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback
 import tqdm
 
 def evaluate_all_levels(model, eval_envs, eval_names, rewards, stds, n_eval_episodes=20, 
@@ -64,6 +65,7 @@ def train_model(name, train_env, eval_envs, eval_params,
                             name=name)
 
     histories = []
+    
     for step in tqdm.tqdm(range(evals)):
         history = model.learn(total_timesteps=recordEvery, 
                               tb_log_name=name, reset_num_timesteps=True)
@@ -77,6 +79,16 @@ def train_model(name, train_env, eval_envs, eval_params,
                        savePath=savePath)
         if saveTrain:
             plot_train(name+"_train", history, savePath=savePath)
+
+    #todo: switch eval/etc to callbacks
+    '''callbacks = [EvalCallback(eval_env, best_model_save_path='./logs/',
+                             log_path='./logs/', eval_freq=recordEvery,
+                             deterministic=True, render=False) for eval_env in eval_envs]
+
+    callback = CallbackList(callbacks)
+
+    model.learn(total_timesteps=total_timesteps, 
+                tb_log_name=name, reset_num_timesteps=True, callback=callback)'''
 
     if saveModel:
         model.save(os.path.join(savePath, name))
