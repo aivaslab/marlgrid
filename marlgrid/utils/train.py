@@ -92,4 +92,4 @@ def train_model(name, train_env, eval_envs, eval_params,
 
     if saveModel:
         model.save(os.path.join(savePath, name))
-    return rewards, stds, history
+    return rewards, stds, train_env
