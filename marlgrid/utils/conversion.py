@@ -3,7 +3,7 @@ import supersuit as ss
 from pettingzoo.utils import wrappers
 from ..agents import GridAgentInterface
 from marlgrid.marlgrid.pz_envs import env_from_config
-from stable_baselines3.common.vec_env import VecMonitor, VecFrameStack, VecVideoRecorder
+from stable_baselines3.common.vec_env import VecMonitor, VecFrameStack, VecVideoRecorder, VecTransposeImage
 import os
 
 def make_env(envClass, player_config, configName=None, memory=1, threads=1, reduce_color=False, size=64,
@@ -39,6 +39,7 @@ def make_env(envClass, player_config, configName=None, memory=1, threads=1, redu
         env = ss.reshape_v0(env, (size, size, 1))
     env = ss.pettingzoo_env_to_vec_env_v1(env)
     env = ss.concat_vec_envs_v1(env, threads, num_cpus=2, base_class='stable_baselines3')
+    #env = VecTransposeImage(env)
     if memory > 1:
         env = VecFrameStack(env, n_stack=memory)
         #consider StackedObservations
