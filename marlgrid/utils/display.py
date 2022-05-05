@@ -7,6 +7,7 @@ import moviepy.video.io.ImageSequenceClip
 from pettingzoo.utils.conversions import aec_to_parallel, parallel_to_aec
 import datetime
 from stable_baselines3.common.results_plotter import load_results, ts2xy
+import numpy as np
 
 def moving_average(values, window):
     """
