@@ -18,7 +18,7 @@ class PlottingCallback(BaseCallback):
 
     def _on_step(self) -> bool:
         #plot things
-        plot_train(self.savePath, self.name)
+        #plot_train(self.savePath, self.name)
             
         for env, name in zip(self.envs, self.names):
             make_pic_video(self.model, env, name, False, True, self.savePath)
@@ -65,7 +65,7 @@ def train_model(name, train_env, eval_envs, eval_params,
                              deterministic=True, render=False) for eval_env in eval_envs]
     eval_cbs.append(plot_cb)
 
-    cb = [EveryNTimesteps(n_steps=recordEvery, callback=CallbackList(eval_cbs))]
+    cb = [EveryNTimesteps(n_steps=recordEvery, callback=CallbackList(eval_cbs,verbose=0))]
 
     model.learn(total_timesteps=total_timesteps, 
                 tb_log_name=name, reset_num_timesteps=True, callback=cb)
