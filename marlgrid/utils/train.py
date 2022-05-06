@@ -10,7 +10,7 @@ class PlottingCallback(BaseCallback):
     :param verbose: (int) Verbosity level 0: not output 1: info 2: debug
     """
     def __init__(self, verbose=0, savePath='', name='', envs=[], names=[]):
-        super(CustomCallback, self).__init__(verbose)
+        super(PlottingCallback, self).__init__(verbose)
         self.savePath = savePath
         self.name = name
         self.envs = []
