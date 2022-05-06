@@ -58,14 +58,14 @@ def train_model(name, train_env, eval_envs, eval_params,
                           zip(eval_envs, eval_params)]
     name = str(name+model.policy_class.__name__)
 
-    plot_cb = PlottingCallback(savePath, name, eval_envs, eval_params)
+    plot_cb = PlottingCallback(savePath, name, eval_envs, eval_params, verbose=0)
     eval_cbs = [EvalCallback(eval_env, best_model_save_path='./logs/',
                              log_path='./logs/', eval_freq=1,
                              n_eval_episodes=eval_eps,
-                             deterministic=True, render=False) for eval_env in eval_envs]
+                             deterministic=True, render=False, verbose=0) for eval_env in eval_envs]
     eval_cbs.append(plot_cb)
 
-    cb = [EveryNTimesteps(n_steps=recordEvery, callback=CallbackList(eval_cbs,verbose=0))]
+    cb = [EveryNTimesteps(n_steps=recordEvery, callback=CallbackList(eval_cbs), verbose=0)]
 
     model.learn(total_timesteps=total_timesteps, 
                 tb_log_name=name, reset_num_timesteps=True, callback=cb)
