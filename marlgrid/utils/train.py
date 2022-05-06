@@ -2,7 +2,7 @@ import os
 from .conversion import make_env
 from .display import make_pic_video, plot_evals, plot_train
 from stable_baselines3.common.evaluation import evaluate_policy
-#from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback
+from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback, EveryNTimesteps
 import tqdm
 
 class PlottingCallback(BaseCallback):
