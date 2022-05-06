@@ -5,6 +5,18 @@ from stable_baselines3.common.evaluation import evaluate_policy
 #from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback
 import tqdm
 
+class PlottingCallback(BaseCallback):
+    """
+    :param verbose: (int) Verbosity level 0: not output 1: info 2: debug
+    """
+    def __init__(self, verbose=0, savePath='', name=''):
+        super(CustomCallback, self).__init__(verbose)
+        
+    def _on_step(self) -> bool:
+        #plot things
+        plot_train(self.savePath, name)
+        return True
+
 def evaluate_all_levels(model, eval_envs, eval_names, rewards, stds, n_eval_episodes=20, 
                         deterministic=True, saveVids=None, 
                         savePics=None, savePath=None, name=None):
@@ -67,7 +79,7 @@ def train_model(name, train_env, eval_envs, eval_params,
 
     #histories = []
     
-    for step in tqdm.tqdm(range(evals)):
+    '''for step in tqdm.tqdm(range(evals)):
         history = model.learn(total_timesteps=recordEvery, 
                               tb_log_name=name, reset_num_timesteps=True)
         #histories += [history,]
@@ -79,18 +91,23 @@ def train_model(name, train_env, eval_envs, eval_params,
             plot_evals(name+"_eval", eval_params, rewards, stds, history, 
                        savePath=savePath, saveEvery=recordEvery)
         if saveTrain:
-            plot_train(savePath, name+"_train")
+            plot_train(savePath, name+"_train")'''
 
     #todo: switch eval/etc to callbacks
-    '''callbacks = [EvalCallback(eval_env, best_model_save_path='./logs/',
-                             log_path='./logs/', eval_freq=recordEvery,
-                             deterministic=True, render=False) for eval_env in eval_envs]
 
-    callback = CallbackList(callbacks)
+
+    plot_cb = PlottingCallback(savePath, name)
+    eval_cbs = [EvalCallback(eval_env, best_model_save_path='./logs/',
+                             log_path='./logs/', eval_freq=1,
+                             deterministic=True, render=False) for eval_env in eval_envs]
+    eval_cbs.append(plot_cb)
+
+    cb = [EveryNTimesteps(n_steps=recordEvery, callback=CallbackList(eval_cbs))]
 
     model.learn(total_timesteps=total_timesteps, 
-                tb_log_name=name, reset_num_timesteps=True, callback=callback)'''
+                tb_log_name=name, reset_num_timesteps=True, callback=cb)
+    plot_train(savePath, name+'train')
 
     if saveModel:
         model.save(os.path.join(savePath, name))
-    return rewards, stds, train_env
+    return train_env
