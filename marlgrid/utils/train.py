@@ -9,12 +9,18 @@ class PlottingCallback(BaseCallback):
     """
     :param verbose: (int) Verbosity level 0: not output 1: info 2: debug
     """
-    def __init__(self, verbose=0, savePath='', name=''):
+    def __init__(self, verbose=0, savePath='', name='', envs=[]):
         super(CustomCallback, self).__init__(verbose)
-        
+        self.savePath = savePath
+        self.name = name
+        self.envs = []
+
     def _on_step(self) -> bool:
         #plot things
-        plot_train(self.savePath, name)
+        plot_train(self.savePath, self.name)
+            
+        for env in self.envs:
+            make_pic_video(self.model, env, self.name+str(self.env.metadata['name']), False, True, self.savePath)
         return True
 
 def evaluate_all_levels(model, eval_envs, eval_names, rewards, stds, n_eval_episodes=20, 
@@ -71,11 +77,11 @@ def train_model(name, train_env, eval_envs, eval_params,
     name = str(name+model.policy_class.__name__)
 
     rewards, stds = {}, {}
-    if evals > 0:
+    '''if evals > 0:
         evaluate_all_levels(model, eval_envs, eval_params, rewards, stds, 
                             n_eval_episodes=eval_eps, deterministic=True,
                             saveVids=saveVids, savePics=savePics, savePath=savePath,
-                            name=name) 
+                            name=name) '''
 
     #histories = []
     
@@ -99,6 +105,7 @@ def train_model(name, train_env, eval_envs, eval_params,
     plot_cb = PlottingCallback(savePath, name)
     eval_cbs = [EvalCallback(eval_env, best_model_save_path='./logs/',
                              log_path='./logs/', eval_freq=1,
+                             n_eval_episodes=eval_eps,
                              deterministic=True, render=False) for eval_env in eval_envs]
     eval_cbs.append(plot_cb)
 
