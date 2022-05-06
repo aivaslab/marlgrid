@@ -2,45 +2,27 @@ import os
 from .conversion import make_env
 from .display import make_pic_video, plot_evals, plot_train
 from stable_baselines3.common.evaluation import evaluate_policy
-from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback, EveryNTimesteps
+from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback, EveryNTimesteps, BaseCallback
 import tqdm
 
 class PlottingCallback(BaseCallback):
     """
     :param verbose: (int) Verbosity level 0: not output 1: info 2: debug
     """
-    def __init__(self, verbose=0, savePath='', name='', envs=[]):
+    def __init__(self, verbose=0, savePath='', name='', envs=[], names=[]):
         super(CustomCallback, self).__init__(verbose)
         self.savePath = savePath
         self.name = name
         self.envs = []
+        self.names = []
 
     def _on_step(self) -> bool:
         #plot things
         plot_train(self.savePath, self.name)
             
-        for env in self.envs:
-            make_pic_video(self.model, env, self.name+str(self.env.metadata['name']), False, True, self.savePath)
+        for env, name in zip(self.envs, self.names):
+            make_pic_video(self.model, env, name, False, True, self.savePath)
         return True
-
-def evaluate_all_levels(model, eval_envs, eval_names, rewards, stds, n_eval_episodes=20, 
-                        deterministic=True, saveVids=None, 
-                        savePics=None, savePath=None, name=None):
-    
-    for env, name in zip(eval_envs, eval_names):
-        #todo: reset env with set seed to be deterministic if it isnt
-
-        if savePics or saveVids:
-            make_pic_video(model, env, name, savePics, saveVids, savePath)
-
-        mean_reward, std_reward = evaluate_policy(model=model, env=env, 
-                                    n_eval_episodes=n_eval_episodes, 
-                                    deterministic=deterministic)
-        if name not in rewards.keys():
-            rewards[name] = []
-            stds[name] = []
-        rewards[name] += [mean_reward,]
-        stds[name] +=  [std_reward, ]
 
 def train_model(name, train_env, eval_envs, eval_params,
                 player_config,
@@ -52,7 +34,6 @@ def train_model(name, train_env, eval_envs, eval_params,
                 savePath="drive/MyDrive/model/", reward_decay=True,
                 extractor_features=32):
 
-    
     if saveModel or saveVids or savePics:
         savePath = os.path.join(savePath, name)
         if not os.path.exists(savePath):
@@ -65,6 +46,7 @@ def train_model(name, train_env, eval_envs, eval_params,
                          path=savePath)
 
     policy_kwargs = dict(
+        #change model hyperparams
         features_extractor_kwargs=dict(features_dim=extractor_features),
         )
     #model = framework(policy, train_env, learning_rate=learning_rate, n_steps=batch_size, tensorboard_log=logdir, use_rms_prop=True)
@@ -76,33 +58,7 @@ def train_model(name, train_env, eval_envs, eval_params,
                           zip(eval_envs, eval_params)]
     name = str(name+model.policy_class.__name__)
 
-    rewards, stds = {}, {}
-    '''if evals > 0:
-        evaluate_all_levels(model, eval_envs, eval_params, rewards, stds, 
-                            n_eval_episodes=eval_eps, deterministic=True,
-                            saveVids=saveVids, savePics=savePics, savePath=savePath,
-                            name=name) '''
-
-    #histories = []
-    
-    '''for step in tqdm.tqdm(range(evals)):
-        history = model.learn(total_timesteps=recordEvery, 
-                              tb_log_name=name, reset_num_timesteps=True)
-        #histories += [history,]
-        evaluate_all_levels(model, eval_envs, eval_params, rewards, stds, 
-                            n_eval_episodes=eval_eps, deterministic=True, 
-                            saveVids=saveVids, savePics=savePics, 
-                            savePath=savePath, name=name)
-        if saveEval:
-            plot_evals(name+"_eval", eval_params, rewards, stds, history, 
-                       savePath=savePath, saveEvery=recordEvery)
-        if saveTrain:
-            plot_train(savePath, name+"_train")'''
-
-    #todo: switch eval/etc to callbacks
-
-
-    plot_cb = PlottingCallback(savePath, name)
+    plot_cb = PlottingCallback(savePath, name, eval_envs, eval_params)
     eval_cbs = [EvalCallback(eval_env, best_model_save_path='./logs/',
                              log_path='./logs/', eval_freq=1,
                              n_eval_episodes=eval_eps,
