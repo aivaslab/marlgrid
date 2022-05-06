@@ -58,7 +58,7 @@ def train_model(name, train_env, eval_envs, eval_params,
                           zip(eval_envs, eval_params)]
     name = str(name+model.policy_class.__name__)
 
-    plot_cb = PlottingCallback(savePath, name, eval_envs, eval_params, verbose=0)
+    plot_cb = PlottingCallback(savePath, name, eval_envs, eval_params)
     eval_cbs = [EvalCallback(eval_env, best_model_save_path='./logs/',
                              log_path='./logs/', eval_freq=1,
                              n_eval_episodes=eval_eps,
