@@ -17,9 +17,6 @@ class para_TutorialEnv(para_MultiGridEnv):
 
     #variants = ["1a", "1b", "1c", "1d", "1e", "1f", "2a", "2b", "2c", "2d", "2e", "2f", "3a", "3b"]
     
-    curvariant = 0;
-    loading_mode = False
-    saving_mode = False
     path = ''
     allParams = {"type": ["t","n"], "var": ["a","b","c","d","e","f","g"], "puppets": [0]}
     params = {}
