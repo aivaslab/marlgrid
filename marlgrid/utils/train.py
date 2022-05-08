@@ -64,7 +64,7 @@ def train_model(name, train_env, eval_envs, eval_params,
                              log_path='./logs/', eval_freq=1,
                              n_eval_episodes=eval_eps,
                              deterministic=True, render=False, verbose=0) for eval_env in eval_envs]
-    plot_cb = PlottingCallback(savePath, name, eval_envs, eval_params, eval_cbs)
+    plot_cb = PlottingCallback( verbose=0, savePath=savePath, name=name, envs=eval_envs, names=eval_params, eval_cbs=eval_cbs)
     eval_cbs.append(plot_cb)
 
     cb = [EveryNTimesteps(n_steps=recordEvery, callback=CallbackList(eval_cbs))]
