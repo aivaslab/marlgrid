@@ -87,11 +87,8 @@ def train_model(name, train_env, eval_envs, eval_params,
     model.learn(total_timesteps=total_timesteps, 
                 tb_log_name=name, reset_num_timesteps=True, callback=cb)
 
-    print('learning done')
     plot_train(savePath, name+'train')
-    print('train plot done')
 
     if saveModel:
         model.save(os.path.join(savePath, name))
-    print('save model done')
     return train_env
