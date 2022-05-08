@@ -3,7 +3,23 @@ from .conversion import make_env
 from .display import make_pic_video, plot_evals, plot_train
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback, EveryNTimesteps, BaseCallback
-import tqdm
+from tqdm.notebook import tqdm
+
+class TqdmCallback(BaseCallback):
+    def __init__(self):
+        super().__init__()
+        self.progress_bar = None
+    
+    def _on_training_start(self):
+        self.progress_bar = tqdm(total=self.locals['total_timesteps'])
+    
+    def _on_step(self):
+        self.progress_bar.update(1)
+        return True
+
+    def _on_training_end(self):
+        self.progress_bar.close()
+        self.progress_bar = None
 
 class PlottingCallback(BaseCallback):
     """
@@ -67,7 +83,7 @@ def train_model(name, train_env, eval_envs, eval_params,
     plot_cb = PlottingCallback( verbose=0, savePath=savePath, name=name, envs=eval_envs, names=eval_params, eval_cbs=eval_cbs)
     eval_cbs.append(plot_cb)
 
-    cb = [EveryNTimesteps(n_steps=recordEvery, callback=CallbackList(eval_cbs))]
+    cb = [EveryNTimesteps(n_steps=recordEvery, callback=CallbackList(eval_cbs)), TqdmCallback()]
 
     model.learn(total_timesteps=total_timesteps, 
                 tb_log_name=name, reset_num_timesteps=True, callback=cb)
