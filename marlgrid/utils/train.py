@@ -52,6 +52,8 @@ def train_model(name, train_env, eval_envs, eval_params,
                 savePath="drive/MyDrive/model/", reward_decay=True,
                 extractor_features=32):
 
+    if not os.path.exists(savePath):
+        os.mkdir(savePath)
     savePath = os.path.join(savePath, name)
     if not os.path.exists(savePath):
         os.mkdir(savePath)
