@@ -21,7 +21,8 @@ def make_env(envClass, player_config, configName=None, memory=1, threads=1, redu
         "width": 9 if envClass == "para_TutorialEnv" else 19,
         "height": 9 if envClass == "para_TutorialEnv" else 19,
         "agents": agents,
-        "memory": memory
+        "memory": memory,
+        "step_reward": -0.1,
     }
 
     env = env_from_config(env_config)
