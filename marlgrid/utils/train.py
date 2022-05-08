@@ -98,8 +98,8 @@ def train_model(name, train_env, eval_envs, eval_params,
 
     policy_kwargs = dict(
         #change model hyperparams
-        features_extractor_kwargs=dict(features_dim=extractor_features),
-        )
+        features_extractor_kwargs=dict(features_dim=extractor_features ),
+        ) if policy[0]=='C' else {}
     #model = framework(policy, train_env, learning_rate=learning_rate, n_steps=batch_size, tensorboard_log=logdir, use_rms_prop=True)
     model = framework(policy, train_env, learning_rate=learning_rate, 
                       n_steps=batch_size, tensorboard_log="logs", policy_kwargs=policy_kwargs)
