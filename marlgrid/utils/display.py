@@ -9,6 +9,28 @@ import datetime
 from stable_baselines3.common.results_plotter import load_results, ts2xy
 import numpy as np
 
+def load_results_tempfix(path: str) -> pandas.DataFrame:
+    # something causes broken csvs, here we ignore extra data
+    monitor_files = get_monitor_files(path)
+    if len(monitor_files) == 0:
+        raise LoadMonitorResultsError(f"No monitor files of the form *{Monitor.EXT} found in {path}")
+    data_frames, headers = [], []
+    for file_name in monitor_files:
+        with open(file_name) as file_handler:
+            first_line = file_handler.readline()
+            assert first_line[0] == "#"
+            header = json.loads(first_line[1:])
+            #cols = pandas.read_csv(file_handler, nrows=1).columns
+            data_frame = pandas.read_csv(file_handler, index_col=None, on_bad_lines='skip')#, usecols=cols)
+            headers.append(header)
+            data_frame["t"] += header["t_start"]
+        data_frames.append(data_frame)
+    data_frame = pandas.concat(data_frames)
+    data_frame.sort_values("t", inplace=True)
+    data_frame.reset_index(inplace=True)
+    data_frame["t"] -= min(header["t_start"] for header in headers)
+    return data_frame
+
 def moving_average(values, window):
     """
     Smooth values by doing a moving average
@@ -27,7 +49,7 @@ def plot_train(log_folder, title='Learning Curve', window=50):
     :param log_folder: (str) the save location of the results to plot
     :param title: (str) the title of the task to plot
     """
-    x, y = ts2xy(load_results(log_folder), 'timesteps')
+    x, y = ts2xy(load_results_tempfix(log_folder), 'timesteps')
     y = moving_average(y, window=window)
     # Truncate x
     x = x[len(x) - len(y):]
