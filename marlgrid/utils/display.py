@@ -88,7 +88,7 @@ def make_pic_video(model, env, name, savePics, saveVids, savePath, random_policy
 
 def plot_evals(savePath, name, names, eval_cbs):
     fig, axs = plt.subplots(1)
-    for i, (env_name, cb) in enumerate(zip(names, eval_cbs)):
+    for i, env_name, cb in enumerate(zip(names, eval_cbs)):
         plt.plot(cb.evaluations_timesteps, cb.evaluations_results, label=env_name, )
     plt.legend(bbox_to_anchor=(1,1), loc="upper left")
     plt.title(name)
