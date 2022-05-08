@@ -9,7 +9,7 @@ class PlottingCallback(BaseCallback):
     """
     :param verbose: (int) Verbosity level 0: not output 1: info 2: debug
     """
-    def __init__(self, verbose=0, savePath='', name='', envs=[], names=[]):
+    def __init__(self, verbose=0, savePath='', name='', envs=[], names=[], eval_cbs):
         super(PlottingCallback, self).__init__(verbose)
         self.savePath = savePath
         self.name = name
@@ -19,6 +19,7 @@ class PlottingCallback(BaseCallback):
     def _on_step(self) -> bool:
         #plot things
         #plot_train(self.savePath, self.name)
+        plot_evals(savePath, name, names, eval_cbs)
             
         for env, name in zip(self.envs, self.names):
             make_pic_video(self.model, env, name, False, True, self.savePath)
@@ -58,11 +59,11 @@ def train_model(name, train_env, eval_envs, eval_params,
                           zip(eval_envs, eval_params)]
     name = str(name+model.policy_class.__name__)
 
-    plot_cb = PlottingCallback(savePath, name, eval_envs, eval_params)
     eval_cbs = [EvalCallback(eval_env, best_model_save_path='./logs/',
                              log_path='./logs/', eval_freq=1,
                              n_eval_episodes=eval_eps,
                              deterministic=True, render=False, verbose=0) for eval_env in eval_envs]
+    plot_cb = PlottingCallback(savePath, name, eval_envs, eval_params, eval_cbs)
     eval_cbs.append(plot_cb)
 
     cb = [EveryNTimesteps(n_steps=recordEvery, callback=CallbackList(eval_cbs))]

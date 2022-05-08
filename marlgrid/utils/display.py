@@ -85,7 +85,17 @@ def make_pic_video(model, env, name, savePics, saveVids, savePath, random_policy
         clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(ims, 15)
         clip.write_videofile(os.path.join(savePath , vidname) + '.mp4')'''
 
-def plot_evals(name, stages, rewards, stds, history, savePath, saveEvery=1):
+def plot_evals(savePath, name, names, eval_cbs):
+    fig, axs = plt.subplots(1)
+    for i, (env_name, cb) in enumerate(zip(names, eval_cbs)):
+        plt.plot(cb.evaluations_timesteps, cb.evaluations_results, label=env_name, )
+    plt.legend(bbox_to_anchor=(1,1), loc="upper left")
+    plt.title(name)
+    plt.xlabel('Timestep')
+    plt.ylabel('Reward')
+    plt.savefig(os.path.join(savePath, name+'_evals'), bbox_inches='tight')
+
+def plot_evals_legacy(name, stages, rewards, stds, history, savePath, saveEvery=1):
     fig, axs = plt.subplots(1)
     xaxis = range(0,len(rewards[stages[0]])*saveEvery,saveEvery)
 
@@ -96,7 +106,6 @@ def plot_evals(name, stages, rewards, stds, history, savePath, saveEvery=1):
     plt.title(name)
     plt.xlabel('Timestep')
     plt.ylabel('Reward')
-    #plt.show()
     plt.savefig(os.path.join(savePath, name), bbox_inches='tight')
 
 def show_state(env, step=0, info=""):
