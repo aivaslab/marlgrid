@@ -8,6 +8,7 @@ from pettingzoo.utils.conversions import aec_to_parallel, parallel_to_aec
 import datetime
 from stable_baselines3.common.results_plotter import load_results, ts2xy
 import numpy as np
+import pandas
 
 def load_results_tempfix(path: str) -> pandas.DataFrame:
     # something causes broken csvs, here we ignore extra data
