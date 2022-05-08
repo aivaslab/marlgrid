@@ -4,6 +4,7 @@ from .display import make_pic_video, plot_evals, plot_train
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback, EveryNTimesteps, BaseCallback
 from tqdm.notebook import tqdm
+import logging
 
 class TqdmCallback(BaseCallback):
     def __init__(self):
@@ -34,8 +35,30 @@ class PlottingCallback(BaseCallback):
         self.eval_cbs = eval_cbs
 
     def _on_step(self) -> bool:
-        #plot things
-        #plot_train(self.savePath, self.name)
+        plot_evals(self.savePath, self.name, self.names, self.eval_cbs)
+        for env, name in zip(self.envs, self.names):
+            make_pic_video(self.model, env, name, False, True, self.savePath)
+        return True
+
+class PlottingCallbackStartStop(BaseCallback):
+    """
+    #bandaid fix to plotting not happening at training start and end
+    """
+    def __init__(self, verbose=0, savePath='', name='', envs=[], names=[], eval_cbs=[]):
+        super(PlottingCallbackStartStop, self).__init__(verbose)
+        self.savePath = savePath
+        self.name = name
+        self.envs = envs
+        self.names = names
+        self.eval_cbs = eval_cbs
+
+    def _on_training_start(self) -> bool:
+        plot_evals(self.savePath, self.name, self.names, self.eval_cbs)
+        for env, name in zip(self.envs, self.names):
+            make_pic_video(self.model, env, name, False, True, self.savePath)
+        return True
+
+    def _on_training_end(self) -> bool:
         plot_evals(self.savePath, self.name, self.names, self.eval_cbs)
             
         for env, name in zip(self.envs, self.names):
@@ -57,6 +80,10 @@ def train_model(name, train_env, eval_envs, eval_params,
     savePath = os.path.join(savePath, name)
     if not os.path.exists(savePath):
         os.mkdir(savePath)
+
+    #log all hyperparameters to a file
+    with open(os.path.join(savePath, 'logs.txt'), 'w') as logfile:
+        logfile.write(str(locals()))
 
     recordEvery = int(total_timesteps/evals) if evals > 0 else 1000
     
@@ -81,10 +108,13 @@ def train_model(name, train_env, eval_envs, eval_params,
                              log_path='./logs/', eval_freq=1,
                              n_eval_episodes=eval_eps,
                              deterministic=True, render=False, verbose=0) for eval_env in eval_envs]
-    plot_cb = PlottingCallback( verbose=0, savePath=savePath, name=name, envs=eval_envs, names=eval_params, eval_cbs=eval_cbs)
+    plot_cb = PlottingCallback( verbose=0, savePath=savePath, 
+        name=name, envs=eval_envs, names=eval_params, eval_cbs=eval_cbs)
+    plot_cb_2 = PlottingCallbackStartStop(verbose=0, savePath=savePath, 
+        name=name, envs=eval_envs, names=eval_params, eval_cbs=eval_cbs)
     eval_cbs.append(plot_cb)
 
-    cb = [EveryNTimesteps(n_steps=recordEvery, callback=CallbackList(eval_cbs)), TqdmCallback()]
+    cb = [EveryNTimesteps(n_steps=recordEvery, callback=CallbackList(eval_cbs)), TqdmCallback(), plot_cb_2]
 
     model.learn(total_timesteps=total_timesteps, 
                 tb_log_name=name, reset_num_timesteps=True, callback=cb)
