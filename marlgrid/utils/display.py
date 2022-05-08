@@ -64,29 +64,11 @@ def plot_train(log_folder, title='Learning Curve', window=50):
     plt.title(title + " Smoothed")
 
     plt.savefig(os.path.join(log_folder, title + str(len(x))), bbox_inches='tight')
+    plt.close(fig)
     #plt.show()
 
 def make_pic_video(model, env, name, savePics, saveVids, savePath, random_policy=False, video_length=50):
     pass
-    #stuff provided in video.py... 
-    '''print(env.__dict__.keys())
-    env = parallel_to_aec(env.unwrapped).unwrapped
-    print(env.__dict__.keys())
-    vidname = name + '-' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-
-    for i in range(video_length+1):
-        if random_policy:
-            actions = { a: env.action_spaces[a].sample() for k, a in enumerate(env.possible_agents) }
-        else:
-            actions = {x: model.predict(obs[x])[0] for x in env.possible_agents}
-        obs, rew, dones, _, = env.step(actions)
-        ims += [env.render(),]
-        if dones['player_0']:
-            break
-    
-    if saveVids:
-        clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(ims, 15)
-        clip.write_videofile(os.path.join(savePath , vidname) + '.mp4')'''
 
 def plot_evals(savePath, name, names, eval_cbs):
     fig, axs = plt.subplots(1)
@@ -98,19 +80,7 @@ def plot_evals(savePath, name, names, eval_cbs):
     plt.xlabel('Timestep')
     plt.ylabel('Reward')
     plt.savefig(os.path.join(savePath, name+'_evals'), bbox_inches='tight')
-
-def plot_evals_legacy(name, stages, rewards, stds, history, savePath, saveEvery=1):
-    fig, axs = plt.subplots(1)
-    xaxis = range(0,len(rewards[stages[0]])*saveEvery,saveEvery)
-
-    for i, stage in enumerate(stages):
-
-        plt.plot(xaxis, rewards[stage], label=stage, )
-    plt.legend(bbox_to_anchor=(1,1), loc="upper left")
-    plt.title(name)
-    plt.xlabel('Timestep')
-    plt.ylabel('Reward')
-    plt.savefig(os.path.join(savePath, name), bbox_inches='tight')
+    plt.close(fig)
 
 def show_state(env, step=0, info=""):
     plt.figure(3)
