@@ -9,7 +9,7 @@ class PlottingCallback(BaseCallback):
     """
     :param verbose: (int) Verbosity level 0: not output 1: info 2: debug
     """
-    def __init__(self, verbose=0, savePath='', name='', envs=[], names=[], eval_cbs):
+    def __init__(self, verbose=0, savePath='', name='', envs=[], names=[], eval_cbs=[]):
         super(PlottingCallback, self).__init__(verbose)
         self.savePath = savePath
         self.name = name
