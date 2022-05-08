@@ -42,7 +42,7 @@ def moving_average(values, window):
     :return: (numpy array)
     """
     weights = np.repeat(1.0, window) / window
-    return np.convolve(values, weights, 'valid')
+    return np.convolve(values.astype(int), weights, 'valid')
 
 
 def plot_train(log_folder, title='Learning Curve', window=50):
