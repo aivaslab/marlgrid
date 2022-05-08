@@ -47,15 +47,14 @@ def train_model(name, train_env, eval_envs, eval_params,
                 framework, policy, learning_rate=1e-5, 
                 evals=25, total_timesteps=1e6, eval_eps=25,
                 batch_size=32, memory=1, size=64, reduce_color=False,
-                threads=1, saveModel=False, saveVids=True, savePics=True, 
+                threads=1, saveModel=True, saveVids=True, savePics=True, 
                 saveEval=True, saveTrain=True,
                 savePath="drive/MyDrive/model/", reward_decay=True,
                 extractor_features=32):
 
-    if saveModel or saveVids or savePics:
-        savePath = os.path.join(savePath, name)
-        if not os.path.exists(savePath):
-            os.mkdir(savePath)
+    savePath = os.path.join(savePath, name)
+    if not os.path.exists(savePath):
+        os.mkdir(savePath)
 
     recordEvery = int(total_timesteps/evals) if evals > 0 else 1000
     
