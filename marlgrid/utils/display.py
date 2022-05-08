@@ -91,7 +91,7 @@ def plot_evals(savePath, name, names, eval_cbs):
     fig, axs = plt.subplots(1)
     for env_name, cb in zip(names, eval_cbs):
         plt.plot(cb.evaluations_timesteps, [np.mean(x) for x in cb.evaluations_results], label=env_name, )
-        plt.scatter(cb.evaluations_timesteps, cb.evaluations_results, label=env_name, )
+        #plt.scatter(cb.evaluations_timesteps, cb.evaluations_results, label=env_name, )
     plt.legend(bbox_to_anchor=(1,1), loc="upper left")
     plt.title(name)
     plt.xlabel('Timestep')
