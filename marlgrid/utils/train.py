@@ -13,13 +13,14 @@ class PlottingCallback(BaseCallback):
         super(PlottingCallback, self).__init__(verbose)
         self.savePath = savePath
         self.name = name
-        self.envs = []
-        self.names = []
+        self.envs = envs
+        self.names = names
+        self.eval_cbs = eval_cbs
 
     def _on_step(self) -> bool:
         #plot things
         #plot_train(self.savePath, self.name)
-        plot_evals(savePath, name, names, eval_cbs)
+        plot_evals(self.savePath, self.name, self.names, self.eval_cbs)
             
         for env, name in zip(self.envs, self.names):
             make_pic_video(self.model, env, name, False, True, self.savePath)
