@@ -10,6 +10,7 @@ from stable_baselines3.common.results_plotter import load_results, ts2xy
 from stable_baselines3.common.monitor import get_monitor_files
 import numpy as np
 import pandas
+import json
 
 def load_results_tempfix(path: str) -> pandas.DataFrame:
     # something causes broken csvs, here we ignore extra data
