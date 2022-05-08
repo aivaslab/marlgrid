@@ -97,7 +97,6 @@ def plot_evals(savePath, name, names, eval_cbs):
     plt.title(name)
     plt.xlabel('Timestep')
     plt.ylabel('Reward')
-    print(savePath, name)
     plt.savefig(os.path.join(savePath, name+'_evals'), bbox_inches='tight')
 
 def plot_evals_legacy(name, stages, rewards, stds, history, savePath, saveEvery=1):
