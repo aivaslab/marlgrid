@@ -57,6 +57,9 @@ class PlottingCallbackStartStop(BaseCallback):
         for env, name in zip(self.envs, self.names):
             make_pic_video(self.model, env, name, False, True, self.savePath)
         return True
+        
+    def _on_step(self) -> bool:
+        pass
 
     def _on_training_end(self) -> bool:
         plot_evals(self.savePath, self.name, self.names, self.eval_cbs)
