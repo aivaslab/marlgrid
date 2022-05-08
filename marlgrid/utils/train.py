@@ -53,15 +53,17 @@ class PlottingCallbackStartStop(BaseCallback):
         self.eval_cbs = eval_cbs
 
     def _on_training_start(self) -> bool:
+        super(PlottingCallbackStartStop, self)._on_training_start()
         plot_evals(self.savePath, self.name, self.names, self.eval_cbs)
         for env, name in zip(self.envs, self.names):
             make_pic_video(self.model, env, name, False, True, self.savePath)
         return True
-        
+
     def _on_step(self) -> bool:
-        pass
+        super(PlottingCallbackStartStop, self)._on_step()
 
     def _on_training_end(self) -> bool:
+        super(PlottingCallbackStartStop, self)._on_training_end()
         plot_evals(self.savePath, self.name, self.names, self.eval_cbs)
             
         for env, name in zip(self.envs, self.names):
