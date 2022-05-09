@@ -43,11 +43,11 @@ def moving_average(values, window):
     """
     weights = np.repeat(1.0, window) / window
     for _position, _value in enumerate(values):
-    try:
-        _new_value = float(_value)
-    except ValueError:
-        _new_value = 0.0
-    values[_position] = _new_value
+        try:
+            _new_value = float(_value)
+        except ValueError:
+            _new_value = 0.0
+        values[_position] = _new_value
     return np.convolve(values.astype(float), weights, 'valid')
 
 
