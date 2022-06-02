@@ -43,8 +43,8 @@ def train_model(name, train_env, eval_envs, eval_params,
                           zip(eval_envs, eval_params)]
     name = str(name+model.policy_class.__name__)
 
-    eval_cbs = [EvalCallback(eval_env, best_model_save_path='./logs/',
-                             log_path='./logs/', eval_freq=recordEvery,
+    eval_cbs = [EvalCallback(eval_env, best_model_save_path=os.path.join(savePath,'/logs/best_model'),
+                             log_path=os.path.join(savePath,'/logs/'), eval_freq=recordEvery,
                              n_eval_episodes=eval_eps,
                              deterministic=True, render=False, verbose=0) for eval_env in eval_envs]
     plot_cb = EveryNTimesteps(n_steps=recordEvery, callback=
