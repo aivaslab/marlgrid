@@ -20,42 +20,36 @@ def train_model(name, train_env, eval_envs, eval_params,
     if not os.path.exists(savePath):
         os.mkdir(savePath)
 
-    #log all hyperparameters to a file
-    with open(os.path.join(savePath, 'logs.txt'), 'w') as logfile:
-        logfile.write(str(locals()))
-
     recordEvery = int(total_timesteps/evals) if evals > 0 else 1000
+    policy_kwargs = dict(
+        # change model hyperparams if cnn
+        features_extractor_kwargs=dict(features_dim=extractor_features ),
+        ) if policy[0]=='C' else {}
     
     train_env = make_env(train_env[0], player_config, train_env[1], memory=memory, threads=threads,
                          reduce_color=reduce_color, size=size, reward_decay=reward_decay,
                          path=savePath)
 
-    policy_kwargs = dict(
-        # change model hyperparams if cnn
-        features_extractor_kwargs=dict(features_dim=extractor_features ),
-        ) if policy[0]=='C' else {}
-
-    model = framework(policy, train_env, learning_rate=learning_rate, 
-                      n_steps=batch_size, tensorboard_log="logs", policy_kwargs=policy_kwargs)
-    eval_envs = [make_env(x, player_config, y, memory=memory, threads=threads, 
+    eval_envs = [make_env(env_name, player_config, env_param, memory=memory, threads=threads, 
                           reduce_color=reduce_color, size=size, saveVids=saveVids, path=savePath, 
-                          recordEvery=recordEvery, reward_decay=reward_decay) for x,y in 
+                          recordEvery=recordEvery, reward_decay=reward_decay) for env_name, env_param in 
                           zip(eval_envs, eval_params)]
     name = str(name+model.policy_class.__name__)
+    model = framework(policy, train_env, learning_rate=learning_rate, 
+                      n_steps=batch_size, tensorboard_log="logs", policy_kwargs=policy_kwargs)
 
     eval_cbs = [EvalCallback(eval_env, best_model_save_path=os.path.join(savePath,'/logs/best_model'),
                              log_path=os.path.join(savePath,'/logs/'), eval_freq=recordEvery,
                              n_eval_episodes=eval_eps,
                              deterministic=True, render=False, verbose=0) for eval_env in eval_envs]
     plot_cb = EveryNTimesteps(n_steps=recordEvery, callback=
-        PlottingCallback(savePath=savePath, name=name, envs=eval_envs, 
-            names=eval_params, eval_cbs=eval_cbs, verbose=0)
-        )
+                PlottingCallback(savePath=savePath, name=name, envs=eval_envs, 
+                    names=eval_params, eval_cbs=eval_cbs, verbose=0))
     plot_cb_extra = PlottingCallbackStartStop(savePath=savePath, name=name,
-        envs=eval_envs, names=eval_params, eval_cbs=eval_cbs, verbose=0)
+                envs=eval_envs, names=eval_params, eval_cbs=eval_cbs, verbose=0,
+                params=str(locals()))
     tqdm_cb = EveryNTimesteps(n_steps=batch_size, callback=
-            TqdmCallback(threads=threads, record_every=batch_size)
-        )
+                TqdmCallback(threads=threads, record_every=batch_size))
 
     model.learn(total_timesteps=total_timesteps, 
                 tb_log_name=name, reset_num_timesteps=True, callback=

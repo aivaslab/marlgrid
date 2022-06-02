@@ -38,6 +38,7 @@ class PlottingCallback(BaseCallback):
     def _on_step(self) -> bool:
         with open(logPath, 'w') as logfile:
             logfile.write('accuracies and stuff')
+            #todo: add custom cb for special infos (e.g. avoidance%, bigR%)
 
         plot_evals(self.savePath, self.name, self.names, self.eval_cbs)
         for env, name in zip(self.envs, self.names):
@@ -48,7 +49,7 @@ class PlottingCallbackStartStop(BaseCallback):
     """
     # bandaid fix to EveryNTimesteps not triggering at training start and end
     """
-    def __init__(self, verbose=0, savePath='', name='', envs=[], names=[], eval_cbs=[]):
+    def __init__(self, verbose=0, savePath='', name='', envs=[], names=[], eval_cbs=[], params=[]):
         super(PlottingCallbackStartStop, self).__init__(verbose)
         self.savePath = savePath
         self.logPath = os.path.join(savePath, 'logs.txt')
@@ -57,9 +58,13 @@ class PlottingCallbackStartStop(BaseCallback):
         self.names = names
         self.eval_cbs = eval_cbs
         self.start_time = 0
+        self.params = params
 
     def _on_training_start(self) -> bool:
         super(PlottingCallbackStartStop, self)._on_training_start()
+
+        with open(self.logPath, 'w') as logfile:
+            logfile.write(self.params)
         plot_evals(self.savePath, self.name, self.names, self.eval_cbs)
         for env, name in zip(self.envs, self.names):
             make_pic_video(self.model, env, name, False, True, self.savePath)
@@ -70,8 +75,7 @@ class PlottingCallbackStartStop(BaseCallback):
         super(PlottingCallbackStartStop, self)._on_training_end()
 
         with open(logPath, 'w') as logfile:
-            logfile.write('end of training!')
-            logfile.write('total time:', time.time()-self.start_time)
+            logfile.write('end of training! total time:', time.time()-self.start_time)
 
         plot_evals(self.savePath, self.name, self.names, self.eval_cbs)
             
